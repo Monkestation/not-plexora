@@ -11,7 +11,7 @@ const client = new Client({
 
 const webhookClients = new Map();
 
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
@@ -33,7 +33,7 @@ client.on('messageCreate', async message => {
         }
 
         await webhookClient.send({
-          content: `**${message.author.username}**: ${message.content}`,
+          content: `${!forwardRule.disableUsername ? `**${message.author.username}**:` : null} ${message.content}`,
           files: attachments,
           username: !forwardRule.disableUsername ? message.author.username : undefined,
           avatarURL: !forwardRule.disableAvatar ? message.author.displayAvatarURL() : undefined

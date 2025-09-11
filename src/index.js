@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, WebhookClient } from 'discord.js';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import config from '../config.json' with { type: "json" };
 import path from 'path';
+import logger from './logger.js';
 
 const client = new Client({
   intents: [
@@ -19,35 +20,54 @@ if (!existsSync(DATA_FOLDER)) {
   mkdirSync(DATA_FOLDER);
 }
 
-let forwardedMessages = new Map();
-try {
-  if (existsSync(FORWARDED_MESSAGES_FILE)) {
-    const data = readFileSync(FORWARDED_MESSAGES_FILE, 'utf8');
-    forwardedMessages = new Map(JSON.parse(data));
-    console.log('Loaded forwarded messages from disk.');
+class ForwardedMessageManager extends Map {
+  constructor(dataFolder) {
+    super();
+    this.loadMessages();
+    this.dataFolder = dataFolder;
   }
-} catch (error) {
-  console.error('Failed to load forwarded messages from disk:', error);
+
+  set(key, value) {
+    super.set(key, value);
+    this.saveMessages();
+    return this;
+  }
+
+  delete(key) {
+    const deleted = super.delete(key);
+    this.saveMessages();
+    return deleted;
+  }
+
+  saveMessages() {
+    try {
+      writeFileSync(this.dataFolder, JSON.stringify([...this]));
+      logger.info("Messages saved!");
+    } catch (error) {
+      logger.error('Failed to save messages to disk', error);
+    }
+  }
+
+  loadMessages() {
+    try {
+      if (existsSync(this.dataFolder)) {
+        const data = readFileSync(this.dataFolder, 'utf8');
+        const loadedData = JSON.parse(data);
+        for (const [key, value] of loadedData) {
+          super.set(key, value);
+        }
+        logger.info(`Loaded forwarded messages from ${this.dataFolder}.`);
+      }
+    } catch (error) {
+      logger.error(`Failed to load forwarded messages from ${this.dataFolder}`, error);
+    }
+  }
 }
 
-const saveMessages = () => {
-  try {
-    writeFileSync(FORWARDED_MESSAGES_FILE, JSON.stringify([...forwardedMessages]));
-    console.debug('Saved forwarded messages to disk.');
-  } catch (error) {
-    console.error('Failed to save forwarded messages to disk:', error);
-  }
-};
-
-// this wiww make evewy devewopew cwy
-forwardedMessages._set = forwardedMessages.set
-forwardedMessages.set = (...args) => {
-  saveMessages();
-  return forwardedMessages._set(...args);
-}
+const forwardedMessages = new ForwardedMessageManager(FORWARDED_MESSAGES_FILE);
 
 client.once('clientReady', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+  logger.info(`Logged in as ${client.user.tag}!`);
 });
 
 client.on('messageCreate', async message => {
@@ -76,9 +96,9 @@ client.on('messageCreate', async message => {
 
         forwardedMessages.set(message.id, sentMessage.id);
 
-        console.debug(`Forwarded message from (${message.id}) ${message.author.tag} in #${message.channel.name}`);
+        logger.debug(`Forwarded message from (${message.id}) ${message.author.tag} in #${message.channel.name}`);
       } catch (error) {
-        console.error(`Failed to forward message to webhook:`, error);
+        logger.error(`Failed to forward message to webhook`, error);
       }
     }
   }
@@ -97,10 +117,10 @@ client.on('messageDelete', async message => {
         if (webhookClient) {
           await webhookClient.deleteMessage(webhookMessageId);
           forwardedMessages.delete(message.id);
-          console.debug(`Deleted webhook message (${webhookMessageId}) corresponding to original message (${message.id})`);
+          logger.debug(`Deleted webhook message (${webhookMessageId}) corresponding to original message (${message.id})`);
         }
       } catch (error) {
-        console.error(`Failed to delete webhook message:`, error);
+        logger.error(`Failed to delete webhook message`, error);
       }
     }
   }
@@ -109,5 +129,13 @@ client.on('messageDelete', async message => {
 client.login(config.token);
 
 process.on('beforeExit', () => {
-  saveMessages();
+  forwardedMessages.saveMessages();
+});
+
+client.on('error', error => {
+  logger.error('Discord client error', error);
+});
+
+process.on('unhandledRejection', error => {
+  logger.error('Unhandled promise rejection', error);
 });

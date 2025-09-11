@@ -12,6 +12,11 @@
   "license": "MIT",
   "packageManager": "pnpm@10.13.1",
   "dependencies": {
-    "discord.js": "^14.22.1"
+    "@sentry/node": "^10.11.0",
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.2",
+    "triple-beam": "^1.4.1",
+    "winston": "^3.17.0",
+    "winston-transport": "^4.9.0"
   }
 }

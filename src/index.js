@@ -13,7 +13,7 @@ const client = new Client({
 });
 
 const webhookClients = new Map();
-const DATA_FOLDER = path.join(import.meta.dirname, 'data');
+const DATA_FOLDER = path.join(import.meta.dirname, "..", 'data');
 const FORWARDED_MESSAGES_FILE = `${DATA_FOLDER}/forwardedMessages.json`;
 
 if (!existsSync(DATA_FOLDER)) {
@@ -111,17 +111,65 @@ client.on('messageDelete', async message => {
       rule => rule.sourceGuildId === message.guildId && rule.sourceChannelId === message.channelId
     );
 
-    if (forwardRule) {
-      try {
-        const webhookClient = webhookClients.get(forwardRule.webhookUrl);
-        if (webhookClient) {
-          await webhookClient.deleteMessage(webhookMessageId);
-          forwardedMessages.delete(message.id);
-          logger.debug(`Deleted webhook message (${webhookMessageId}) corresponding to original message (${message.id})`);
-        }
-      } catch (error) {
-        logger.error(`Failed to delete webhook message`, error);
+    let ignoreTripped = false;
+    if (forwardRule.ignoreRegex) {
+      const regex = new RegExp(forwardRule.ignoreRegex, 'i');
+      if (regex.test(message.content)) {
+        ignoreTripped = true;
       }
+    }
+
+    if (!forwardRule || ignoreTripped) return;
+
+    try {
+      const webhookClient = webhookClients.get(forwardRule.webhookUrl);
+      if (webhookClient) {
+        await webhookClient.deleteMessage(webhookMessageId);
+        forwardedMessages.delete(message.id);
+        logger.debug(`Deleted webhook message (${webhookMessageId}) corresponding to original message (${message.id})`);
+      }
+    } catch (error) {
+      logger.error(`Failed to delete webhook message`, error);
+    }
+  }
+});
+
+client.on('messageUpdate', async (oldMessage, newMessage) => {
+  if (forwardedMessages.has(oldMessage.id)) {
+    const webhookMessageId = forwardedMessages.get(oldMessage.id);
+    const forwardRule = config.forwards.find(
+      rule => rule.sourceGuildId === oldMessage.guildId && rule.sourceChannelId === oldMessage.channelId
+    );
+
+    let ignoreTripped = false;
+    if (forwardRule.ignoreRegex) {
+      const regex = new RegExp(forwardRule.ignoreRegex, 'i');
+      if (regex.test(newMessage.content)) {
+        ignoreTripped = true;
+      }
+    }
+
+    if (!forwardRule || ignoreTripped) return;
+
+    try {
+      const webhookClient = webhookClients.get(forwardRule.webhookUrl);
+      if (webhookClient) {
+        let attachments = [];
+        if (newMessage.attachments.size > 0) {
+          attachments = newMessage.attachments.map(attachment => attachment.url);
+        }
+
+        await webhookClient.editMessage(webhookMessageId, {
+          content: `${!forwardRule.disableUsername ? `**${newMessage.author.username}**:` : null} ${newMessage.content}`,
+          files: attachments,
+          username: !forwardRule.disableUsername ? newMessage.author.username : undefined,
+          avatarURL: !forwardRule.disableAvatar ? newMessage.author.displayAvatarURL() : undefined
+        });
+
+        logger.debug(`Updated webhook message (${webhookMessageId}) corresponding to original message (${oldMessage.id})`);
+      }
+    } catch (error) {
+      logger.error(`Failed to update webhook message`, error);
     }
   }
 });

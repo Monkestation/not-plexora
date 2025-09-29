@@ -4,7 +4,10 @@
     {
       "sourceGuildId": "YOUR_SOURCE_GUILD_ID",
       "sourceChannelId": "YOUR_SOURCE_CHANNEL_ID",
-      "webhookUrl": "YOUR_WEBHOOK_URL_HERE"
+      "webhookUrl": "YOUR_WEBHOOK_URL_HERE",
+      "disableAvatar": true,
+      "disableUsername": true,
+      "ignoreRegex": "<.+?>"
     }
   ]
 }

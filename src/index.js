@@ -76,6 +76,19 @@ client.on('messageCreate', async message => {
   for (const forwardRule of config.forwards) {
     if (message.guildId === forwardRule.sourceGuildId && message.channelId === forwardRule.sourceChannelId) {
       try {
+        let ignoreTripped = false;
+        if (forwardRule.ignoreRegex) {
+          const regex = new RegExp(forwardRule.ignoreRegex, 'i');
+          if (regex.test(message.content)) {
+            ignoreTripped = true;
+          }
+        }
+
+        if (ignoreTripped) {
+          logger.debug(`Message from (${message.id}) ${message.author.tag} in #${message.channel.name} ignored due to ignoreRegex`);
+          return;
+        }
+        
         let webhookClient = webhookClients.get(forwardRule.webhookUrl);
         if (!webhookClient) {
           webhookClient = new WebhookClient({ url: forwardRule.webhookUrl });

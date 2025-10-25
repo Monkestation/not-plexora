@@ -37,7 +37,7 @@ export default class PolyTheParrot {
       flags: [MessageFlags.SuppressEmbeds, MessageFlags.SuppressNotifications],
     });
     this.nextTimeout = setTimeout(
-      this.pickAndSend,
+      () => this.pickAndSend(),
       randomBetween(this.MIN_MS, this.MAX_MS)
     );
   }

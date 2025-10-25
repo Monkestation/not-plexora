@@ -38,6 +38,8 @@ export default class PolyTheParrot {
 
   async pickAndSend() {
     const phrases = await this.getFilteredPhrases();
+    const nextTrigger = this.resetTimer()
+
     if (phrases.length === 0) {
       logger.warn("no valid available phrases.");
       return;
@@ -46,7 +48,6 @@ export default class PolyTheParrot {
     const phrase = pickRandomInArray(phrases);
     this.lastUsedPhrases.set(phrase, Date.now());
 
-    const nextTrigger = randomBetween(this.MIN_MS, this.MAX_MS);
     try {
       await this.webhook.send({
         content: phrase,
@@ -58,9 +59,12 @@ export default class PolyTheParrot {
     } catch (error) {
       logger.error(error);
     }
+  }
 
+  resetTimer(e = randomBetween(this.MIN_MS, this.MAX_MS)) {
     clearTimeout(this.nextTimeout);
-    this.nextTimeout = setTimeout(() => this.pickAndSend(), nextTrigger);
+    this.nextTimeout = setTimeout(() => this.pickAndSend(), e);
+    return e;
   }
 
   async getFilteredPhrases() {
@@ -84,6 +88,9 @@ export default class PolyTheParrot {
         let matchesFilter = false;
         for (const filter of this.FILTERS_REGEX) {
           matchesFilter = filter.test(phrase);
+        }
+        if (matchesFilter) {
+          logger.warn(`Phrase '${phrase}' triggered filter`);
         }
         return !tooSoon && !matchesFilter;
       });

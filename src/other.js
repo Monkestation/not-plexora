@@ -14,6 +14,27 @@ export function getFilenameFriendlyUTCDate(date = new Date()) {
   return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}_UTC`;
 }
 
+/**
+ * @param {number} wtime 
+ * @param {"simple" | "extended"} format 
+ * @returns Formatted time
+ */
+export function getTimeText(wtime, format) {
+  const hour = Math.floor(wtime / 3600);
+  const minute = Math.floor((wtime - hour * 3600) / 60);
+  const second = Math.floor((wtime - hour * 3600 - minute * 60));
+
+  if (format === "simple") {
+    const formattedHour = hour.toString().padStart(2, "0");
+    const formattedMinute = minute.toString().padStart(2, "0");
+    const formattedSecond = second.toString().padStart(2, "0");
+
+    return `${formattedHour}:${formattedMinute}:${formattedSecond}`;
+  }
+
+  return `${hour}h ${minute}m ${second}s`;
+}
+
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }

@@ -1,6 +1,7 @@
 import { MessageFlags, WebhookClient } from "discord.js";
 import fsp from "node:fs/promises";
-import { pickRandomInArray, randomBetween } from "../other";
+import { pickRandomInArray, randomBetween } from "../other.js";
+import path from "node:path";
 
 export default class PolyTheParrot {
   /**
@@ -43,7 +44,7 @@ export default class PolyTheParrot {
 
   async getPhrases() {
     try {
-      const npcFile = await fsp.readFile(this.filepath, "utf8");
+      const npcFile = await fsp.readFile(path.resolve(this.filepath), "utf8");
       /**
        * @type {{
        *  phrases: string[];
@@ -53,7 +54,7 @@ export default class PolyTheParrot {
        * }}
        */
       const parsedNpc = JSON.parse(npcFile);
-      return parsedNpc;
+      return parsedNpc.phrases;
     } catch (error) {
       return [`Failed to read file\n\`\`\`\n${error}\`\`\``];
     }

@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import config from '../config.json' with { type: "json" };
 import path from 'path';
 import logger from './logger.js';
+import PolyTheParrot from './classes/PolyTheParrot.js';
 
 const client = new Client({
   intents: [
@@ -65,6 +66,11 @@ class ForwardedMessageManager extends Map {
 }
 
 const forwardedMessages = new ForwardedMessageManager(FORWARDED_MESSAGES_FILE);
+
+if (config.poly) {
+  const poly = new PolyTheParrot(config.poly.webhookUrl, config.poly.filepath, config.poly.minIntervalMinutes, config.poly.maxIntervalMinutes)
+  poly.pickAndSend();
+}
 
 client.once('clientReady', () => {
   logger.info(`Logged in as ${client.user.tag}!`);

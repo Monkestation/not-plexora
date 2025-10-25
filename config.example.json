@@ -12,7 +12,7 @@
   ],
   "poly": {
     "filepath": "/opt/ss13/data/npc_saves/Poly.json",
-    "webhookUrl": "https://discord.com/api/webhooks/1431470898648715406/aZa_X9NV-slFbwRFRLESXEfXyIO1a8yfjEyY3LXrCejaaTcpVqIeiZ9VGycoCMslksbJ",
+    "webhookUrl": "oh shit",
     "minIntervalMinutes": 10,
     "maxIntervalMinutes": 45
   }

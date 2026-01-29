@@ -15,5 +15,14 @@
     "webhookUrl": "oh shit",
     "minIntervalMinutes": 10,
     "maxIntervalMinutes": 45
-  }
+  },
+  "TicketChannelRenamer": [
+    {
+      "embedfind": {
+        "field": "Server",
+        "find": "monke|monkestation|mrp"
+      },
+      "append": "monke"
+    }
+  ]
 }

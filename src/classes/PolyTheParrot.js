@@ -32,7 +32,7 @@ export default class PolyTheParrot {
     this.REPEAT_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48 hours
     this.FILTERS_REGEX = [
       /^.* has signed up as .*$/i,
-      /nigger|nigga|ligger|ligga|tranny|troons|troon|faggot|retarded|retard|tardoid|tard|ret@rd|t@rd|nigg@|fag|f@g|f@ggot|pussy|pussi|ligger|ligga|nigg|minor/i
+      /nigger|nigga|ligger|ligga|tranny|troons|troon|faggot|retarded|retard|tardoid|tard|ret@rd|t@rd|nigg@|fag|f@g|f@ggot|pussy|pussi|ligger|ligga|nigg|minor|hitler|third reich|nazi|natzee/i
     ];
   }
 
@@ -54,7 +54,7 @@ export default class PolyTheParrot {
         flags: [MessageFlags.SuppressEmbeds, MessageFlags.SuppressNotifications],
       });
       logger.info(
-        `Sent phrase '${phrase}' - Next in ${getTimeText(nextTrigger, "simple")} (${new Date(Date.now() + nextTrigger).toISOString()})`
+        `Sent phrase '${phrase}' - Next in ${getTimeText(nextTrigger / 1000, "extended")} (${new Date(Date.now() + nextTrigger).toISOString()})`
       );
     } catch (error) {
       logger.error(error);

@@ -31,7 +31,11 @@ export default class PolyTheParrot {
     this.lastUsedPhrases = new Map(); // phrase -> timestamp
     this.REPEAT_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48 hours
     this.FILTERS_REGEX = [
-      /^.* has signed up as .*$/i,
+      /has signed up as/i,
+      /Crystal hyperstructure integrity faltering/i,
+      /returning to safe operating parameters/i,
+      /CRYSTAL DELAMINATION IMMINENT/i,
+      /Integrity: /i,
       customFilter
     ];
   }

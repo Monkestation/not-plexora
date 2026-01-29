@@ -32,7 +32,7 @@ export default class PolyTheParrot {
     this.REPEAT_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48 hours
     this.FILTERS_REGEX = [
       /^.* has signed up as .*$/i,
-      /nigger|nigga|ligger|ligga|tranny|troons|troon|faggot|retarded|retard|tardoid|tard|ret@rd|t@rd|nigg@|fag|f@g|f@ggot|pussy|pussi|ligger|ligga|nigg|minor|hitler|third reich|nazi|natzee/i
+      /\b(?:nigg[ea@]|nigg|l[iy]gg[ea]|trann[iy]|troons?|f[a@]gg?ot|f[a@]g|ret[a@]rd(?:ed)?|(?<!bas)tard|tardoid|puss[iy]|hitler|third reich|nazi|natzee)\b/gi
     ];
   }
 

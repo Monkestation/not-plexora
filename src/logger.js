@@ -10,7 +10,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
-    dsn: config.SENTRY_DSN,
+    dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
   });
 }

@@ -29,7 +29,7 @@ modules.push(new ForwardedMessageManager(client, FORWARDED_MESSAGES_FILE));
 modules.push(new TicketChannelRenamer(client));
 
 if (config.poly) {
-  const poly = new PolyTheParrot(config.poly.webhookUrl, config.poly.filepath, config.poly.minIntervalMinutes, config.poly.maxIntervalMinutes)
+  const poly = new PolyTheParrot(config.poly.webhookUrl, config.poly.filepath, config.poly.minIntervalMinutes, config.poly.maxIntervalMinutes, config.poly.filter)
   modules.push(poly);
   poly.pickAndSend();
 }

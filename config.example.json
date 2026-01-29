@@ -14,7 +14,8 @@
     "filepath": "/opt/ss13/data/npc_saves/Poly.json",
     "webhookUrl": "oh shit",
     "minIntervalMinutes": 10,
-    "maxIntervalMinutes": 45
+    "maxIntervalMinutes": 45,
+    "filter": "meow|asshole"
   },
   "TicketChannelRenamer": [
     {

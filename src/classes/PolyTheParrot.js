@@ -12,7 +12,7 @@ export default class PolyTheParrot {
    * @param {number} minMinutes Min random minutes
    * @param {number} maxMinutes Max random minutes
    */
-  constructor(webhook, filepath, minMinutes, maxMinutes) {
+  constructor(webhook, filepath, minMinutes, maxMinutes,customFilter) {
     this.webhook = new WebhookClient(
       {
         url: webhook,
@@ -32,7 +32,7 @@ export default class PolyTheParrot {
     this.REPEAT_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48 hours
     this.FILTERS_REGEX = [
       /^.* has signed up as .*$/i,
-      /(nigg[a@e]r?|l[iy]gg[a@e]|trann[iy]|troons?|f[a@]gg?ot|f[a@]g|ret[a@]rd(ed)?|(?<!bas)tard|tardoid|puss[iy]|minor|hitler|third reich|nazi|natzee)/gi
+      customFilter
     ];
   }
 
@@ -86,7 +86,7 @@ export default class PolyTheParrot {
         const lastUsed = this.lastUsedPhrases.get(phrase);
         const tooSoon = lastUsed && now - lastUsed < this.REPEAT_INTERVAL_MS;
         let matchesFilter = false;
-        for (const filter of this.FILTERS_REGEX) {
+        for (const filter of this.FILTERS_REGEX.filter(Boolean).map(e=>new RegExp(e))) {
           matchesFilter = filter.test(phrase);
         }
         if (matchesFilter) {

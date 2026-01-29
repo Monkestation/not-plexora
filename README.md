@@ -4,6 +4,10 @@ this is NOT plexora
 
 # Modules
 
+## ForwardedMessageManager
+
+Mirrors messages from a source channel to a webhook, syncing all creations, edits, and deletions in real-time. Uses a local database to keep links alive across bot restarts.
+
 ## PolyTheParrot
 
 Pickes entries from the specified poly file in the config, and sends them to the webhook specified in the config

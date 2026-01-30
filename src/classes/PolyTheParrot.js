@@ -36,6 +36,7 @@ export default class PolyTheParrot {
       /returning to safe operating parameters/i,
       /CRYSTAL DELAMINATION IMMINENT/i,
       /Integrity: /i,
+      /node has been researched/i,
       customFilter
     ];
   }

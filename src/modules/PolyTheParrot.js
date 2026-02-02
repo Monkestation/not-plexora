@@ -87,16 +87,18 @@ export default class PolyTheParrot {
 
       const now = Date.now();
 
+      const activeFilters = this.FILTERS_REGEX.filter(Boolean).map(e => new RegExp(e));
+
       const filtered = parsedNpc.phrases.filter((phrase) => {
         const lastUsed = this.lastUsedPhrases.get(phrase);
-        const tooSoon = lastUsed && now - lastUsed < this.REPEAT_INTERVAL_MS;
-        let matchesFilter = false;
-        for (const filter of this.FILTERS_REGEX.filter(Boolean).map(e=>new RegExp(e))) {
-          matchesFilter = filter.test(phrase);
-        }
+        const tooSoon = lastUsed && (now - lastUsed < this.REPEAT_INTERVAL_MS);
+
+        const matchesFilter = activeFilters.some(filter => filter.test(phrase));
+
         if (matchesFilter) {
           logger.warn(`Phrase '${phrase}' triggered filter`);
         }
+
         return !tooSoon && !matchesFilter;
       });
 

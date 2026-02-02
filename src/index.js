@@ -5,9 +5,9 @@ import {  existsSync, mkdirSync } from 'fs';
 import config from '../config.json' with { type: "json" };
 import path from 'path';
 import logger from './logger.js';
-import PolyTheParrot from './classes/PolyTheParrot.js';
-import { ForwardedMessageManager } from './classes/ForwardedMessageManager.js';
-import { TicketChannelRenamer } from './classes/TicketChannelRenamer.js';
+import PolyTheParrot from './modules/PolyTheParrot.js';
+import { ForwardedMessageManager } from './modules/ForwardedMessageManager.js';
+import { TicketChannelRenamer } from './modules/TicketChannelRenamer.js';
 
 const client = new Client({
   intents: [

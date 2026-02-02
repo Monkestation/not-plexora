@@ -1,6 +1,6 @@
 // @ts-check
 import config from '../../config.json' with { type: "json" };
-import { ChannelType, Events } from "discord.js";
+import { ChannelType, Events, TextChannel } from "discord.js";
 import logger from '../logger.js';
 
 export class TicketChannelRenamer {
@@ -78,7 +78,14 @@ export class TicketChannelRenamer {
     for (const rule of this.rules) {
       if (!rule.embedfind?.field || !rule.embedfind?.find || !rule.append)
         continue;
+      /**
+       * @type {TextChannel}
+       */
+      // @ts-ignore
+      const channel = msgs[0].channel
 
+      if (rule.parentCategory && channel.parentId !== rule.parentCategory)
+        continue
       const fieldName = rule.embedfind.field.toLowerCase();
       const valueRegex = new RegExp(rule.embedfind.find, "i");
 

@@ -1,29 +1,34 @@
 {
   "token": "",
-  "forwards": [
-    {
-      "sourceGuildId": "YOUR_SOURCE_GUILD_ID",
-      "sourceChannelId": "YOUR_SOURCE_CHANNEL_ID",
-      "webhookUrl": "YOUR_WEBHOOK_URL_HERE",
-      "disableAvatar": true,
-      "disableUsername": true,
-      "ignoreRegex": "<.+?>"
+  "modules": {
+    "ForwardedMessageManager": [
+      {
+        "sourceGuildId": "YOUR_SOURCE_GUILD_ID",
+        "sourceChannelId": "YOUR_SOURCE_CHANNEL_ID",
+        "webhookUrl": "YOUR_WEBHOOK_URL_HERE",
+        "disableAvatar": true,
+        "disableUsername": true,
+        "ignoreRegex": "<.+?>"
+      }
+    ],
+    "PolyTheParrot": {
+      "filepath": "/opt/ss13/data/npc_saves/Poly.json",
+      "webhookUrl": "oh shit",
+      "minIntervalMinutes": 10,
+      "maxIntervalMinutes": 45,
+      "filter": "meow|asshole"
+    },
+    "TicketChannelRenamer": {
+      "rules": [
+        {
+          "parentCategory": "1212567797276737566",
+          "embedFind": {
+            "field": "Server",
+            "find": "monke|monkestation|mrp"
+          },
+          "append": "monke"
+        }
+      ]
     }
-  ],
-  "poly": {
-    "filepath": "/opt/ss13/data/npc_saves/Poly.json",
-    "webhookUrl": "oh shit",
-    "minIntervalMinutes": 10,
-    "maxIntervalMinutes": 45,
-    "filter": "meow|asshole"
-  },
-  "TicketChannelRenamer": [
-    {
-      "embedfind": {
-        "field": "Server",
-        "find": "monke|monkestation|mrp"
-      },
-      "append": "monke"
-    }
-  ]
+  }
 }

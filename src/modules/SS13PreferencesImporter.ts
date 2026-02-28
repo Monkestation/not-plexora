@@ -297,7 +297,7 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 						new EmbedBuilder()
 							.setTitle("Error")
 							.setDescription(
-								`An error occurred while saving your preferences: ${(error as Error).message}\n\`\`\`${(error as Error).stack || ""}\`\`\``,
+								`An error occurred while saving your preferences: ${(error as Error).message}\n\`\`\`\n${(error as Error).stack || ""}\n\`\`\``,
 							)
 							.setColor(Colors.Red),
 					],

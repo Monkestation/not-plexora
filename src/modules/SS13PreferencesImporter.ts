@@ -210,7 +210,7 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 					`**Character Count:** ${characters.length}\n` +
 					`**Enabled antags:** ${antags}\n` +
 					// ourgh
-					`**Character names (Human):** ${characters.map((e) => (e as { human_name?: string }).human_name ?? "Unknown").join(", ")}`,
+					`**Character names (Human):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}`,
 			)
 			.setColor(0x860069);
 

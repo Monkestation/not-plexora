@@ -286,9 +286,24 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 				});
 				return;
 			}
-
-			const existingPreferencesPath = await this.backupExistingPreferences(userRecord.ckey);
-			await this.writeFileToDisk(userRecord.ckey, data);
+			let existingPreferencesPath: string | null = null;
+			try {
+				existingPreferencesPath = await this.backupExistingPreferences(userRecord.ckey);
+				await this.writeFileToDisk(userRecord.ckey, data);
+			} catch (error) {
+				this.logger.error(`Error writing preferences to disk for ckey ${userRecord.ckey}:`, error);
+				await interaction.followUp({
+					embeds: [
+						new EmbedBuilder()
+							.setTitle("Error")
+							.setDescription(
+								`An error occurred while saving your preferences: ${(error as Error).message}\n\`\`\`${(error as Error).stack || ""}\`\`\``,
+							)
+							.setColor(Colors.Red),
+					],
+				});
+				return;
+			}
 
 			await approvalMessage.edit({ components: [] });
 			if (existingPreferencesPath) {

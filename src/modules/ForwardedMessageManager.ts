@@ -1,8 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { type Client, WebhookClient } from "discord.js";
+import { WebhookClient } from "discord.js";
+import type { AroxelpClient } from "../Aroxelp.js";
 import { DATA_FOLDER } from "../constants.js";
-import logger from "../logger.js";
 import BaseModule from "./BaseModule.js";
 
 // Yes i know theres two classes, no i couldn't figure out how to mixin two classes into one.
@@ -23,9 +23,11 @@ type Config = {
 class ForwardedMessageManagerMap extends Map {
 	module: ForwardedMessageManager;
 	dataFolder: string;
+	logger: typeof BaseModule.prototype.logger;
 	constructor(module: ForwardedMessageManager) {
 		super();
 		this.module = module;
+		this.logger = module.logger;
 		this.dataFolder = path.join(DATA_FOLDER, "forwardedMessages.json");
 		this.loadMessages();
 	}
@@ -45,9 +47,9 @@ class ForwardedMessageManagerMap extends Map {
 	saveMessages() {
 		try {
 			writeFileSync(this.dataFolder, JSON.stringify([...this]));
-			logger.info("Messages saved!");
+			this.logger.info("Messages saved!");
 		} catch (error) {
-			logger.error("Failed to save messages to disk", error);
+			this.logger.error("Failed to save messages to disk", error);
 		}
 	}
 
@@ -59,10 +61,10 @@ class ForwardedMessageManagerMap extends Map {
 				for (const [key, value] of loadedData) {
 					super.set(key, value);
 				}
-				logger.info(`Loaded forwarded messages from ${this.dataFolder}.`);
+				this.logger.info(`Loaded forwarded messages from ${this.dataFolder}.`);
 			}
 		} catch (error) {
-			logger.error(`Failed to load forwarded messages from ${this.dataFolder}`, error);
+			this.logger.error(`Failed to load forwarded messages from ${this.dataFolder}`, error);
 		}
 	}
 }
@@ -70,7 +72,7 @@ class ForwardedMessageManagerMap extends Map {
 export default class ForwardedMessageManager extends BaseModule<Config> {
 	forwards: ForwardedMessageManagerMap;
 	webhookClients: Map<string, WebhookClient>;
-	constructor(bot: Client) {
+	constructor(bot: AroxelpClient) {
 		super(bot);
 		this.bot = bot;
 		this.webhookClients = new Map();
@@ -97,7 +99,7 @@ export default class ForwardedMessageManager extends BaseModule<Config> {
 						}
 
 						if (ignoreTripped) {
-							logger.debug(
+							this.logger.debug(
 								// @ts-expect-error
 								`Message from (${message.id}) ${message.author.tag} in #${message.channel.name} ignored due to ignoreRegex`,
 							);
@@ -126,12 +128,12 @@ export default class ForwardedMessageManager extends BaseModule<Config> {
 
 						this.forwards.set(message.id, sentMessage.id);
 
-						logger.debug(
+						this.logger.debug(
 							// @ts-expect-error
 							`Forwarded message from (${message.id}) ${message.author.tag} in #${message.channel.name}`,
 						);
 					} catch (error) {
-						logger.error(`Failed to forward message to webhook`, error);
+						this.logger.error(`Failed to forward message to webhook`, error);
 					}
 				}
 			}
@@ -166,10 +168,12 @@ export default class ForwardedMessageManager extends BaseModule<Config> {
 							files: attachments,
 						});
 
-						logger.debug(`Updated webhook message (${webhookMessageId}) corresponding to original message (${oldMessage.id})`);
+						this.logger.debug(
+							`Updated webhook message (${webhookMessageId}) corresponding to original message (${oldMessage.id})`,
+						);
 					}
 				} catch (error) {
-					logger.error(`Failed to update webhook message`, error);
+					this.logger.error(`Failed to update webhook message`, error);
 				}
 			}
 		});
@@ -196,10 +200,10 @@ export default class ForwardedMessageManager extends BaseModule<Config> {
 					if (webhookClient) {
 						await webhookClient.deleteMessage(webhookMessageId);
 						this.forwards.delete(message.id);
-						logger.debug(`Deleted webhook message (${webhookMessageId}) corresponding to original message (${message.id})`);
+						this.logger.debug(`Deleted webhook message (${webhookMessageId}) corresponding to original message (${message.id})`);
 					}
 				} catch (error) {
-					logger.error(`Failed to delete webhook message`, error);
+					this.logger.error(`Failed to delete webhook message`, error);
 				}
 			}
 		});

@@ -1,20 +1,22 @@
-import type { Client } from "discord.js";
-import config from "../../config.json" with { type: "json" };
+/** biome-ignore-all lint/suspicious/noExplicitAny: *explodes you* */
 import type { AroxelpClient } from "../Aroxelp";
-
-// coconut.jpg i dont understand why i need this
-export interface CallableBaseModule {
-	new (bot: AroxelpClient): BaseModule;
-}
+import logger from "../logger";
 
 /**
  * This is the base module for all modules, all modules classes should extend this.
  */
 export default class BaseModule<Config = object | null> {
 	config: Config;
-	bot: Client;
-	constructor(bot: Client) {
-		this.config = config.modules[this.constructor.name as keyof typeof config.modules] as unknown as Config;
+	bot: AroxelpClient;
+	/* If specified in a class, the type must be specified as well */
+	static requiredConfigKeys?: string[] = [];
+
+	static dependsOn?: readonly (typeof BaseModule<any>)[];
+	logger: typeof logger;
+
+	constructor(bot: AroxelpClient) {
+		this.config = bot.config.modules[this.constructor.name as keyof typeof bot.config.modules] as unknown as Config;
 		this.bot = bot;
+		this.logger = logger.child({ module: this.constructor.name });
 	}
 }

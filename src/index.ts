@@ -1,3 +1,4 @@
+import "./prototypes.js";
 import { AroxelpClient } from "./Aroxelp.js";
 import logger from "./logger.js";
 

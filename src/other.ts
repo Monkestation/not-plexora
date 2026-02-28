@@ -1,3 +1,4 @@
+import { access } from "node:fs/promises";
 /**
  * Returns a human friendly UTC date which is not actually accurate but good enough for a human to read.
  */
@@ -40,3 +41,18 @@ export function randomBetween(min: number, max: number): number {
 }
 
 export const pickRandomInArray = (array: string | any[]) => array[Math.floor(Math.random() * array.length)];
+
+export const parseByondKey = (key: string) => {
+	const keyReplacePattern = /[^\da-z]/g;
+	return key.toLowerCase().replaceAll(keyReplacePattern, "").trim();
+};
+
+// safe fs.promises.access
+export async function safeAccess(path: string) {
+	try {
+		await access(path);
+		return true;
+	} catch (_error) {
+		return false;
+	}
+}

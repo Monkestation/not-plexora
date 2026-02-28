@@ -1,5 +1,5 @@
-import { ChannelType, type Client, Events, type GuildChannel, type Message, type TextChannel } from "discord.js";
-import logger from "../logger.js";
+import { ChannelType, Events, type GuildChannel, type Message, type TextChannel } from "discord.js";
+import type { AroxelpClient } from "../Aroxelp.js";
 import BaseModule from "./BaseModule.js";
 
 type Rule = {
@@ -17,7 +17,7 @@ type Config = {
 
 export default class TicketChannelRenamer extends BaseModule<Config> {
 	ticketRegex: RegExp;
-	constructor(bot: Client) {
+	constructor(bot: AroxelpClient) {
 		super(bot);
 		this.ticketRegex = /ticket-\d*/gi;
 
@@ -45,7 +45,7 @@ export default class TicketChannelRenamer extends BaseModule<Config> {
 		try {
 			await channel.setName(newName, "TicketChannelRenamer: config rule match");
 		} catch (err) {
-			logger.error("TicketChannelRenamer rename failed:", err);
+			this.logger.error("TicketChannelRenamer rename failed:", err);
 		}
 	}
 
@@ -62,9 +62,6 @@ export default class TicketChannelRenamer extends BaseModule<Config> {
 		}
 	}
 
-	/**
-	 * @param {import("discord.js").Message[]} msgs
-	 */
 	findMatchingRule(msgs: Message[]) {
 		for (const rule of this.config.rules) {
 			if (!rule.embedFind?.field || !rule.embedFind?.find || !rule.append) continue;

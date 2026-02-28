@@ -18,12 +18,12 @@ var SentrySeverity;
 })(SentrySeverity || (SentrySeverity = {}));
 
 const DEFAULT_LEVELS_MAP = {
-	silly: SentrySeverity.Debug,
-	verbose: SentrySeverity.Debug,
-	info: SentrySeverity.Info,
-	debug: SentrySeverity.Debug,
-	warn: SentrySeverity.Warning,
-	error: SentrySeverity.Error,
+	silly: SentrySeverity["Debug"],
+	verbose: SentrySeverity["Debug"],
+	info: SentrySeverity["Info"],
+	debug: SentrySeverity["Debug"],
+	warn: SentrySeverity["Warning"],
+	error: SentrySeverity["Error"],
 };
 
 class ExtendedError extends Error {

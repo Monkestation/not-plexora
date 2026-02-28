@@ -1,7 +1,7 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { type Client, MessageFlags, WebhookClient } from "discord.js";
-import logger from "../logger.js";
+import { MessageFlags, WebhookClient } from "discord.js";
+import type { AroxelpClient } from "../Aroxelp.js";
 import { getTimeText, pickRandomInArray, randomBetween } from "../other.js";
 import BaseModule from "./BaseModule.js";
 
@@ -25,7 +25,9 @@ export default class PolyTheParrot extends BaseModule<Config> {
 	sendWindowStart: number = 0;
 	isRateLimited: boolean = false;
 
-	constructor(bot: Client) {
+	requiredConfigKeys: (keyof Config)[] = ["filepath", "webhookUrl"];
+
+	constructor(bot: AroxelpClient) {
 		super(bot);
 		this.webhook = new WebhookClient(
 			{
@@ -39,7 +41,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 		);
 
 		if (this.config.minIntervalMinutes === undefined || this.config.maxIntervalMinutes === undefined) {
-			logger.warn("minIntervalMinutes or maxIntervalMinutes not set in config, defaulting to 5 and 20");
+			this.logger.warn("minIntervalMinutes or maxIntervalMinutes not set in config, defaulting to 5 and 20");
 		}
 		this.MIN_MS = (this.config.minIntervalMinutes ?? 5) * 60 * 1000;
 		this.MAX_MS = (this.config.maxIntervalMinutes ?? 20) * 60 * 1000;
@@ -59,7 +61,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 
 	async pickAndSend() {
 		if (this.isRateLimited) {
-			logger.warn("Rate limited - skipping send");
+			this.logger.warn("Rate limited - skipping send");
 			return;
 		}
 
@@ -73,7 +75,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 
 		if (this.sendAttempts > 4) {
 			this.isRateLimited = true;
-			logger.warn("Rate limit exceeded - pausing for 5 minutes");
+			this.logger.warn("Rate limit exceeded - pausing for 5 minutes");
 			setTimeout(
 				() => {
 					this.isRateLimited = false;
@@ -88,7 +90,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 		const nextTrigger = this.resetTimer();
 
 		if (phrases.length === 0) {
-			logger.warn("no valid available phrases.");
+			this.logger.warn("no valid available phrases.");
 			return;
 		}
 
@@ -100,11 +102,11 @@ export default class PolyTheParrot extends BaseModule<Config> {
 				content: phrase,
 				flags: [MessageFlags.SuppressEmbeds, MessageFlags.SuppressNotifications],
 			});
-			logger.info(
+			this.logger.info(
 				`Sent phrase '${phrase}' - Next in ${getTimeText(nextTrigger / 1000, "extended")} (${new Date(Date.now() + nextTrigger).toISOString()})`,
 			);
 		} catch (error) {
-			logger.error(error);
+			this.logger.error(error);
 		}
 	}
 
@@ -135,7 +137,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 				const matchesFilter = activeFilters.some((filter) => filter.test(phrase));
 
 				if (matchesFilter) {
-					logger.warn(`Phrase '${phrase}' triggered filter`);
+					this.logger.warn(`Phrase '${phrase}' triggered filter`);
 				}
 
 				return !tooSoon && !matchesFilter;
@@ -143,7 +145,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 
 			return filtered;
 		} catch (error) {
-			logger.error(error);
+			this.logger.error(error);
 			return [`Failed to read file\n\`\`\`\n${error}\`\`\``];
 		}
 	}

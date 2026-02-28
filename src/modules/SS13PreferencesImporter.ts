@@ -1,11 +1,35 @@
-import { type Client, EmbedBuilder, Events, type Message } from "discord.js";
-import logger from "../logger";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import path from "node:path";
+import {
+	ActionRowBuilder,
+	AttachmentBuilder,
+	ButtonBuilder,
+	type ButtonInteraction,
+	ButtonStyle,
+	Colors,
+	EmbedBuilder,
+	Events,
+	FileBuilder,
+	type GuildMember,
+	GuildTextBasedChannel,
+	type Interaction,
+	type Message,
+	MessageFlags,
+	type NonThreadGuildBasedChannel,
+} from "discord.js";
+import type { AroxelpClient } from "../Aroxelp";
+import { parseByondKey, safeAccess, sleep } from "../other";
 import BaseModule from "./BaseModule";
+import { Plexora } from "./Plexora";
 
 type Config = {
+	Instructions: string;
+	MissingLinkMessage: string;
 	TicketCategoryChannelID: string;
 	PlayerDataFolder: string;
 	AdminRoleIDs: string[];
+	PlexoraServerID: string;
 };
 
 // playerdata folder is alphabet, then inside those folders are player usernames that start with that letter.
@@ -16,58 +40,307 @@ type Config = {
 It needs to be able to process the character file, read each character and their loadout
 
 Then it needs to send a prompt asking an admin (specified in config via a role they have), to approve or deny the character import after reviewing.
-it will have an approve or deny component. 
+it will have an approve or deny component.
 
 i am typing all of this because otherwise my braimn will FUCKING IMPLODE and lose track of what im supposed to be doing.
+
+note: server does validation so plese ignore the lack of checking "dur is this a REAL character save? UHuhfd"
 */
 export default class SS13PreferencesImporter extends BaseModule<Config> {
-	constructor(bot: Client) {
+	static dependsOn = [Plexora];
+
+	static requiredConfigKeys: (keyof Config)[] = ["TicketCategoryChannelID", "PlayerDataFolder", "PlexoraServerID"];
+
+	constructor(bot: AroxelpClient) {
 		super(bot);
-		bot.on(Events.MessageCreate, (message: Message) => this.onMessageCreate(message));
-		// add event listener for components interactions, uhhh use the footer of embed which will contain ID of mesage with 
+
+		if (!existsSync(this.config.PlayerDataFolder)) {
+			throw new Error(`Player data folder ${this.config.PlayerDataFolder} does not exist.`);
+		}
+		this.onMessageCreate = this.onMessageCreate.bind(this);
+		this.onInteraction = this.onInteraction.bind(this);
+		this.onChannelCreate = this.onChannelCreate.bind(this);
+		bot.on(Events.MessageCreate, this.onMessageCreate);
+		bot.on(Events.InteractionCreate, this.onInteraction);
+		bot.on(Events.ChannelCreate, this.onChannelCreate);
+	}
+
+	async onChannelCreate(channel: NonThreadGuildBasedChannel) {
+		if (channel.parentId !== this.config.TicketCategoryChannelID) {
+			return;
+		}
+
+		await sleep(1000);
+
+		if (!channel.isTextBased()) {
+			return;
+		}
+
+		if (this.config.Instructions)
+			await channel.send({
+				embeds: [new EmbedBuilder().setTitle("Preference Importer - How To").setDescription(this.config.Instructions)],
+			});
+	}
+
+	async onInteraction(interaction: Interaction) {
+		if (!interaction.isButton() || !interaction.channel || interaction.channel.isDMBased() || !interaction.inGuild()) return;
+		try {
+			if (interaction.channel.parentId !== this.config.TicketCategoryChannelID) {
+				return;
+			}
+
+			const [action, messageId] = interaction.customId.split(":");
+			if (!messageId) {
+				this.logger.warn(`Received interaction with invalid customId format: ${interaction.customId}`);
+				return;
+			}
+
+			await this.handleCharacterImportInteraction(interaction, action, messageId);
+		} catch (error) {
+			if (!interaction.deferred) {
+				await interaction.deferReply();
+			}
+			this.logger.error(`An error occured during interaction\n${(error as Error).message}\n${(error as Error).stack || ""}`);
+			await interaction?.followUp({
+				embeds: [
+					new EmbedBuilder()
+						.setTitle("Error")
+						.setDescription(
+							`An error occured running the command: ${(error as Error).message}\n\`\`\`${(error as Error).stack || ""}\`\`\``,
+						)
+						.setColor(Colors.Red),
+				],
+			});
+		}
 	}
 
 	async onMessageCreate(message: Message) {
-		if (message.channel.isDMBased()) return;
+		if (message.channel.isDMBased() || message.author.bot) {
+			return;
+		}
 
-		if (message.channel.parentId !== this.config.TicketCategoryChannelID) return;
+		if (message.channel.parentId !== this.config.TicketCategoryChannelID) {
+			return;
+		}
 
-		if (!message.member?.roles.cache.some((role) => this.config.AdminRoleIDs.includes(role.id))) return;
-
+		const userRecord = await this.bot.getModule(Plexora).lookupCkey(this.config.PlexoraServerID, message.author.id);
+		if (!userRecord || !userRecord.ckey) {
+			this.logger.warn(
+				`User ${message.author.tag} (${message.author.id}) does not have a linked ckey, cannot process preferences import.`,
+			);
+			message.reply(this.config.MissingLinkMessage || "You do not have a linked ckey, preference import will not work.");
+			return;
+		}
+		if (!message.attachments.size) {
+			this.logger.debug(`Message ${message.id} does not have any attachments, ignoring.`);
+			return;
+		}
 		for (const attachment of message.attachments.values()) {
-			if (attachment.contentType !== "application/json") continue;
+			this.logger.debug(
+				`Processing attachment ${attachment.url} with content type ${attachment.contentType} and size ${attachment.size} bytes`,
+			);
+			if (!attachment.contentType?.startsWith("application/json")) {
+				this.logger.warn(`Attachment ${attachment.url} is not a JSON file, skipping`);
+				continue;
+			}
+
+			if (attachment.size > 2_000_000) {
+				this.logger.warn(`Attachment ${attachment.url} is larger than 2mb, skipping`);
+				await message.channel.send({
+					content: `Attachment ${attachment.url} is larger than 2mb, please upload a smaller file.`,
+				});
+				continue;
+			}
 
 			const response = await fetch(attachment.url);
 			const data = await response.json();
 
-			if (Object.keys(data).length === 0 || (typeof data === "object" && !Array.isArray(data))) {
-				logger.warn(`Attachment ${attachment.url} does not contain a valid JSON object, skipping`);
+			if (!data || typeof data !== "object" || Array.isArray(data)) {
+				this.logger.warn(`Attachment ${attachment.url} does not contain a valid JSON object, skipping`);
 				continue;
 			}
 
-			const embed = this.processPreferencesForNeatEmbed(data);
+			const embeds = [this.processPreferencesForNeatEmbed(data, userRecord.ckey)];
+
+			if (await this.checkExistingPreferences(userRecord.ckey)) {
+				embeds.push(
+					new EmbedBuilder()
+						.setTitle("Preferences Warning")
+						.setDescription(
+							`The ckey *${userRecord.ckey}* already has a pre-existent preferences.json file (This is fine if you haven't done anything related to your savefile on the server).\nIf this is accepted, the old one will be renamed to preferences.json.bak, along with the previous copy uploaded here. Proceed with caution.`,
+						)
+						.setColor(Colors.Orange),
+				);
+			}
+
+			await message.reply({
+				embeds,
+				components: [
+					new ActionRowBuilder<ButtonBuilder>().addComponents(
+						new ButtonBuilder().setCustomId(`approve:${message.id}`).setLabel("Approve").setStyle(ButtonStyle.Success),
+						new ButtonBuilder().setCustomId(`deny:${message.id}`).setLabel("Deny").setStyle(ButtonStyle.Danger),
+					),
+				],
+			});
 
 			return;
 		}
+
+		const mimeBlacklist = ["image/", "video/", "audio/"];
+		if (message.attachments.some((attachment) => mimeBlacklist.some((prefix) => attachment.contentType?.startsWith(prefix)))) {
+			return;
+		}
+		// if we got here, it means we didn't find any valid attachments but the user attached something.
+		await message.react("❓");
+		await message.react("📎");
 	}
 
-	processPreferencesForNeatEmbed(preferences: any) {
-		const characters = [];
+	processPreferencesForNeatEmbed(preferences: any, ckey: string) {
 		const version = preferences.version || "Unknown";
+		const characters = Object.entries(preferences)
+			.filter(([k, v]) => k.startsWith("character") && typeof v === "object")
+			.map(([_, v]) => v);
 
-		for (const key of Object.keys(preferences)) {
-			if (key.startsWith("character")) {
-				characters.push(preferences[key]);
-			}
-		}
+		const antags = Array.isArray(preferences.be_special) ? preferences.be_special.join(", ") : "None";
 
 		const embed = new EmbedBuilder()
-			.setTitle("SS13 Preferences Import")
+			.setTitle(`SS13 Preferences Import for ${ckey}`)
 			.setDescription(
-				`Savefile Version: ${version}\nCharacter Count: ${characters.length}\nEnabled antags: ${preferences.be_special.join(", ")}\nCharacter names (Human): ${characters.map((e) => e.human_name).join(", ")}`,
+				`Savefile Version: ${version}\n` +
+					`**Character Count:** ${characters.length}\n` +
+					`**Enabled antags:** ${antags}\n` +
+					// ourgh
+					`**Character names (Human):** ${characters.map((e) => (e as { human_name?: string }).human_name ?? "Unknown").join(", ")}`,
 			)
 			.setColor(0x860069);
 
 		return embed;
+	}
+
+	async handleCharacterImportInteraction(interaction: ButtonInteraction, action: string, messageId: string) {
+		if (!interaction.guild) {
+			// dude how...
+			await interaction.reply({ content: "This interaction can only be used within a server.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+		const member = await interaction.guild.members.fetch(interaction.user.id);
+		const canApprove = this.canApproveImport(member);
+		const uploadMessage = await interaction.channel?.messages.fetch(messageId);
+		const approvalMessage = await interaction.message.fetch();
+
+		if (!canApprove) {
+			await interaction.reply({ content: "You do not have permission to perform this action.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		this.logger.debug(`${uploadMessage?.id} ${uploadMessage?.author.username}`);
+
+		if (canApprove && uploadMessage?.author.id === interaction.user.id) {
+			await interaction.reply({ content: "You cannot approve/deny your own import request.", flags: MessageFlags.Ephemeral });
+			return;
+		}
+
+		if (!approvalMessage.components.length) {
+			await interaction.reply({
+				content: "This import has already been handled.",
+				flags: MessageFlags.Ephemeral,
+			});
+			return;
+		}
+
+		await interaction.deferReply();
+
+		if (action === "deny") {
+			await approvalMessage.edit({
+				components: [],
+			});
+			await interaction.followUp({
+				content: `Character import denied by <@${interaction.user.id}>.`,
+				flags: MessageFlags.SuppressNotifications,
+			});
+			return;
+		}
+		try {
+			const preferencesAttachment = uploadMessage?.attachments.find((attachment) =>
+				attachment.contentType?.startsWith("application/json"),
+			);
+
+			if (!uploadMessage || !preferencesAttachment) {
+				await interaction.followUp({
+					content: "Could not find the original message or preferences attachment.",
+				});
+				await approvalMessage.edit({ components: [] });
+				return;
+			}
+
+			const response = await fetch(preferencesAttachment.url);
+			const data = await response.json();
+
+			const userRecord = await this.bot.getModule(Plexora).lookupCkey(this.config.PlexoraServerID, uploadMessage.author.id);
+			if (!userRecord || !userRecord.ckey) {
+				this.logger.error(
+					`User record for ${uploadMessage.author.tag} (${uploadMessage.author.id}) is missing ckey after approval.`,
+				);
+				await interaction.followUp({
+					content: "An error occurred while processing your import. Please ping @flleeppyy.",
+				});
+				return;
+			}
+
+			const existingPreferencesPath = await this.backupExistingPreferences(userRecord.ckey);
+			await this.writeFileToDisk(userRecord.ckey, data);
+
+			await approvalMessage.edit({ components: [] });
+			if (existingPreferencesPath) {
+				const existingPreferences = await readFile(existingPreferencesPath);
+				await interaction.followUp({
+					content:
+						"Character import processed successfully. Attached below are your old preferences on the server. You may close this ticket.",
+					files: [
+						new AttachmentBuilder(existingPreferences, {
+							name: `${userRecord.ckey}_preferences.old.json`,
+						}),
+					],
+				});
+			} else {
+				await interaction.followUp({ content: "Character import processed successfully. You may close this ticket." });
+			}
+		} catch (error) {
+			this.logger.error(`Error fetching message ${messageId} for character import approval:`, error);
+		}
+	}
+
+	canApproveImport(member: GuildMember) {
+		return member.permissions.has("Administrator") || this.config.AdminRoleIDs.some((roleId) => member.roles.cache.has(roleId));
+	}
+
+	getPreferencesPath(ckey: string) {
+		return path.resolve(this.config.PlayerDataFolder, ckey[0].toLowerCase(), parseByondKey(ckey), "preferences.json");
+	}
+
+	async backupExistingPreferences(ckey: string) {
+		const filePath = this.getPreferencesPath(ckey);
+		const userFolder = path.dirname(filePath);
+		if (await safeAccess(filePath)) {
+			const backupPath = path.resolve(userFolder, "preferences.json.bak");
+			await rename(filePath, backupPath);
+			return backupPath;
+		}
+	}
+
+	async writeFileToDisk(ckey: string, data: any) {
+		const filePath = this.getPreferencesPath(ckey);
+		const userFolder = path.dirname(filePath);
+		if (!(await safeAccess(userFolder))) {
+			await mkdir(userFolder, { recursive: true });
+		}
+
+		await writeFile(filePath, JSON.stringify(data, null, 2));
+		this.logger.info(`Wrote preferences for ckey ${ckey} to ${filePath}`);
+	}
+
+	async checkExistingPreferences(ckey: string): Promise<boolean> {
+		const filePath = this.getPreferencesPath(ckey);
+		return await safeAccess(filePath);
 	}
 }

@@ -3,9 +3,12 @@ import * as Sentry from "@sentry/node";
 import { configDotenv } from "dotenv";
 import winston from "winston";
 import { getFilenameFriendlyUTCDate, sleep } from "./other.js";
+// @ts-expect-error imma be real, im not converting that shit to ts
 import SentryTransport from "./WinstonSentryTransport.js";
 
-configDotenv();
+configDotenv({
+	quiet: true,
+});
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -75,7 +78,8 @@ if (process.env.LOGGER_PRETTY) {
 					if (typeof message === "object") {
 						message = inspect(message, { depth: null, colors: true });
 					}
-					return `[${info.timestamp}] ${info.level}: ${message}${info.stack ? `\n${info.stack}` : ""}`;
+					const childName = info.module ? ` [M:${info.module}]` : "";
+					return `[${info.timestamp}]${childName} ${info.level}: ${message}${info.stack ? `\n${info.stack}` : ""}`;
 				}),
 			),
 		}),

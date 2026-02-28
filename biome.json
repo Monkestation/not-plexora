@@ -21,7 +21,9 @@
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double"
+			"quoteStyle": "double",
+			"indentStyle": "tab",
+			"lineWidth": 130
 		}
 	},
 	"assist": {

@@ -9,7 +9,8 @@
 		"dev": "bun --watch src/index.js",
 		"biome:all": "biome check --write",
 		"biome:lint": "biome lint --write",
-		"biome:format": "biome format --write"
+		"biome:format": "biome format --write",
+		"clean": "rm logs/*; rm data/*;"
 	},
 	"keywords": [],
 	"author": "",
@@ -17,6 +18,7 @@
 	"packageManager": "bun@1.3.10",
 	"dependencies": {
 		"@sentry/node": "^10.40.0",
+		"@types/node": "^25.3.2",
 		"discord.js": "^14.25.1",
 		"dotenv": "^17.3.1",
 		"triple-beam": "^1.4.1",
@@ -24,6 +26,8 @@
 		"winston-transport": "^4.9.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.4"
+		"@biomejs/biome": "2.4.4",
+		"@types/bun": "^1.3.9",
+		"typescript": "^5.9.3"
 	}
 }

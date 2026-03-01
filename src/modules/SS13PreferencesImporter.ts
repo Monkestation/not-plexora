@@ -313,8 +313,7 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			if (existingPreferencesPath) {
 				const existingPreferences = await readFile(existingPreferencesPath);
 				await interaction.followUp({
-					content:
-						"Character import processed successfully. Attached below are your old preferences on the server. You can now connect to the server. You may close this ticket.",
+					content: `<@${interaction.user.id}> Approved this character import.\nCharacter import processed successfully. Attached below are your old preferences on the server. You can now connect to the server. You may close this ticket.`,
 					files: [
 						new AttachmentBuilder(existingPreferences, {
 							name: `${userRecord.ckey}_preferences.old.json`,

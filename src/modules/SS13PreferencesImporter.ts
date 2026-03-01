@@ -10,9 +10,7 @@ import {
 	Colors,
 	EmbedBuilder,
 	Events,
-	FileBuilder,
 	type GuildMember,
-	GuildTextBasedChannel,
 	type Interaction,
 	type Message,
 	MessageFlags,
@@ -203,6 +201,11 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 
 		const antags = Array.isArray(preferences.be_special) ? preferences.be_special.join(", ") : "None";
 
+		const headshots = characters
+			.filter((c) => (c as any).headshot || (c as any).silicon_headshot)
+			.map((c) => `${(c as any).real_name || "Unknown"}: ${(c as any).headshot} - ${(c as any).silicon_headshot}`)
+			.join("\n");
+
 		const embed = new EmbedBuilder()
 			.setTitle(`SS13 Preferences Import for ${ckey}`)
 			.setDescription(
@@ -210,7 +213,8 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 					`**Character Count:** ${characters.length}\n` +
 					`**Enabled antags:** ${antags}\n` +
 					// ourgh
-					`**Character names (Real):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}`,
+					`**Character names (Real):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}` +
+					`\n\n**Characters with Headshot:**\n${headshots}`,
 			)
 			.setColor(0x860069);
 
@@ -310,7 +314,7 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 				const existingPreferences = await readFile(existingPreferencesPath);
 				await interaction.followUp({
 					content:
-						"Character import processed successfully. Attached below are your old preferences on the server. You may close this ticket.",
+						"Character import processed successfully. Attached below are your old preferences on the server. You can now connect to the server. You may close this ticket.",
 					files: [
 						new AttachmentBuilder(existingPreferences, {
 							name: `${userRecord.ckey}_preferences.old.json`,

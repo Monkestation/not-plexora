@@ -22,11 +22,17 @@ import BaseModule from "./BaseModule";
 import { Plexora } from "./Plexora";
 
 type Config = {
+	/** Message sent when a new channel created under the TicketCategoryChannelID category is made */
 	Instructions: string;
+	/** Message sent if a user does not have a Discord link record (Plexora reliant) */
 	MissingLinkMessage: string;
+	/** Category ID that ticketsbot (or a similar ticket system) uses to create new tickets under. This module will listen for new channels here and send instructions. */
 	TicketCategoryChannelID: string;
+	/** Folder on disk that is the root of player saves on the ss13 server */
 	PlayerDataFolder: string;
+	/** Admins that can approve import requests */
 	AdminRoleIDs: string[];
+	/** Server ID in Plexoras config */
 	PlexoraServerID: string;
 };
 
@@ -68,11 +74,11 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			return;
 		}
 
-		await sleep(1000);
-
 		if (!channel.isTextBased()) {
 			return;
 		}
+
+		await sleep(1000);
 
 		if (this.config.Instructions)
 			await channel.send({
@@ -81,8 +87,9 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 	}
 
 	async onInteraction(interaction: Interaction) {
-		if (!interaction.isButton() || !interaction.channel || interaction.channel.isDMBased() || !interaction.inGuild()) return;
-		try {
+		return this.wrapInteractionHandler(async (interaction) => {
+			if (!interaction.isButton() || !interaction.channel || interaction.channel.isDMBased() || !interaction.inGuild()) return;
+
 			if (interaction.channel.parentId !== this.config.TicketCategoryChannelID) {
 				return;
 			}
@@ -94,22 +101,7 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			}
 
 			await this.handleCharacterImportInteraction(interaction, action, messageId);
-		} catch (error) {
-			if (!interaction.deferred) {
-				await interaction.deferReply();
-			}
-			this.logger.error(`An error occured during interaction\n${(error as Error).message}\n${(error as Error).stack || ""}`);
-			await interaction?.followUp({
-				embeds: [
-					new EmbedBuilder()
-						.setTitle("Error")
-						.setDescription(
-							`An error occured running the command: ${(error as Error).message}\n\`\`\`${(error as Error).stack || ""}\`\`\``,
-						)
-						.setColor(Colors.Red),
-				],
-			});
-		}
+		}, this.logger)(interaction);
 	}
 
 	async onMessageCreate(message: Message) {
@@ -236,8 +228,6 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			await interaction.reply({ content: "You do not have permission to perform this action.", flags: MessageFlags.Ephemeral });
 			return;
 		}
-
-		this.logger.debug(`${uploadMessage?.id} ${uploadMessage?.author.username}`);
 
 		if (canApprove && uploadMessage?.author.id === interaction.user.id) {
 			await interaction.reply({ content: "You cannot approve/deny your own import request.", flags: MessageFlags.Ephemeral });

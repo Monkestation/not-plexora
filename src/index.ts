@@ -12,3 +12,6 @@ process.on("unhandledRejection", (error) => {
 process.on("uncaughtException", (error) => {
 	logger.error(error);
 });
+
+// @ts-expect-error it exists.
+Error.stackTraceLimit = 50;

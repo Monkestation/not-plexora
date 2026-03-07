@@ -77,6 +77,44 @@ export class Plexora extends BaseModule<Config> {
 		}
 	}
 
+	async kickByCkey({
+		server_id,
+		ckey,
+		kicked_by,
+		clear_prefs_cache,
+	}: {
+		server_id: string;
+		ckey: string;
+		kicked_by: string;
+		clear_prefs_cache?: boolean;
+	}) {
+		const url = new URL("/byondserver_kick", this.config.apiUrl).toString();
+
+		const body = JSON.stringify({
+			id: server_id,
+			ckey,
+			kicked_by,
+			clear_prefs_cache,
+		});
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Basic ${this.config.apiKey}`,
+				},
+				body,
+			});
+
+			if (!response.ok) {
+				throw new Error(`Plexora API returned status ${response.status}: ${await response.text()}`);
+			}
+		} catch (error) {
+			this.logger.error(`Error kicking ckey from Plexora API`, error);
+		}
+	}
+
 	async checkAlive() {
 		const url = new URL("/api/servers/stats", this.config.apiUrl).toString();
 		try {

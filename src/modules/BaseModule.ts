@@ -1,6 +1,10 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: *explodes you* */
+
+import { Colors, EmbedBuilder, type Interaction } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
 import logger from "../logger";
+
+type InteractionExecutor<T extends Interaction> = (interaction: T) => Promise<void>;
 
 /**
  * This is the base module for all modules, all modules classes should extend this.
@@ -18,5 +22,44 @@ export default class BaseModule<Config = object | null> {
 		this.config = bot.config.modules[this.constructor.name as keyof typeof bot.config.modules] as unknown as Config;
 		this.bot = bot;
 		this.logger = logger.child({ module: this.constructor.name });
+	}
+
+	wrapInteractionHandler<T extends Interaction>(executor: InteractionExecutor<T>, logger: { error: (msg: string) => void }) {
+		return async (interaction: T) => {
+			try {
+				await executor(interaction);
+			} catch (error) {
+				const err = error as Error;
+
+				logger.error(
+					`Interaction Error
+User: ${interaction.user?.tag ?? "unknown"}
+Guild: ${interaction.guildId ?? "DM"}
+Interaction: ${interaction.id}
+
+${err.message}
+${err.stack ?? ""}`,
+				);
+				try {
+					if (interaction.isRepliable()) {
+						if (!interaction.deferred && !interaction.replied) {
+							await interaction.deferReply({ ephemeral: true });
+						}
+
+						await interaction.followUp({
+							embeds: [
+								new EmbedBuilder()
+									.setTitle("Error")
+									.setDescription(`An error occurred while processing this interaction.\n\n**${err.message}**`)
+									.setColor(Colors.Red),
+							],
+							ephemeral: true,
+						});
+					}
+				} catch {
+					// swallow secondary errors
+				}
+			}
+		};
 	}
 }

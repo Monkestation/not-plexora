@@ -280,6 +280,14 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 				});
 				return;
 			}
+
+			await this.bot.getModule(Plexora).kickByCkey({
+				server_id: this.config.PlexoraServerID,
+				ckey: userRecord.ckey,
+				kicked_by: `Plexora Preference Import - Approved by ${interaction.user.tag} (${interaction.user.id})`,
+				clear_prefs_cache: true,
+			});
+
 			let existingPreferencesPath: string | null = null;
 			try {
 				existingPreferencesPath = await this.backupExistingPreferences(userRecord.ckey);

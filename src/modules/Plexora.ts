@@ -81,11 +81,13 @@ export class Plexora extends BaseModule<Config> {
 		server_id,
 		ckey,
 		kicked_by,
+		reason,
 		clear_prefs_cache,
 	}: {
 		server_id: string;
 		ckey: string;
 		kicked_by: string;
+		reason?: string;
 		clear_prefs_cache?: boolean;
 	}) {
 		const url = new URL("/byondserver_kick", this.config.apiUrl).toString();
@@ -93,7 +95,8 @@ export class Plexora extends BaseModule<Config> {
 		const body = JSON.stringify({
 			id: server_id,
 			ckey,
-			kicked_by,
+			admin_ckey: kicked_by,
+			reason,
 			clear_prefs_cache,
 		});
 

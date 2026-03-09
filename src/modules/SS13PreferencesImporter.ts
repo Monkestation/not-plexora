@@ -284,7 +284,8 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			await this.bot.getModule(Plexora).kickByCkey({
 				server_id: this.config.PlexoraServerID,
 				ckey: userRecord.ckey,
-				kicked_by: `Plexora Preference Import - Approved by ${interaction.user.tag} (${interaction.user.id})`,
+				kicked_by: `Plexora`,
+				reason: `Preference Import - Approved by ${interaction.user.tag} (${interaction.user.id})`,
 				clear_prefs_cache: true,
 			});
 

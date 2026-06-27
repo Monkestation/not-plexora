@@ -29,6 +29,15 @@
 					"append": "monke"
 				}
 			]
-		}
+		},
+		"SS14StatusRelay": [
+			{
+				"sourceGuildId": "YOUR_SOURCE_GUILD_ID",
+				"sourceChannelId": "YOUR_SOURCE_CHANNEL_ID",
+				"apiEndpoint": "http://<server_ip>:1212/admin/announce",
+				"apiKey": "[REDACTED]",
+				"includeRegex": "<(?:all|ss14)>\\s*"
+			}
+		]
 	}
 }

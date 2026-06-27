@@ -8,6 +8,7 @@ type RelayConfig = {
 	apiEndpoint: string;
 	apiKey: string;
 	includeRegex: string;
+	subtitle: string;
 };
 
 type Config = RelayConfig[];
@@ -35,11 +36,11 @@ export default class SS14StatusRelay extends BaseModule<Config> {
 						}
 					}
 
-					console.log(relayedMessage);
-
 					const body = JSON.stringify({
-						subtitle: "System Status Update",
+						subtitle: relayConfig.subtitle || `System Status Update`,
 						message: relayedMessage,
+						source_url: message.url,
+						source: ` | #${message.channel.name} - From: @${message.author.username}`
 					});
 
 					const response = await fetch(relayConfig.apiEndpoint, {

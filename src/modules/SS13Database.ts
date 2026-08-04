@@ -32,7 +32,7 @@ export default class SS13Database extends BaseModule<Config> {
 		this.knex = {};
 		for (const dbId in this.config) {
 			this.knex[dbId] = Knex({
-				client: "pg",
+				client: this.config[dbId].split(":")[0],
 				connection: this.config[dbId],
 			});
 		}

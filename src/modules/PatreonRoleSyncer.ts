@@ -1,3 +1,4 @@
+import { Events } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
 import BaseModule from "./BaseModule";
 import type { PlexoraDiscordLink } from "./Plexora";
@@ -20,7 +21,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 
 	constructor(bot: AroxelpClient) {
 		super(bot);
-		bot.once("ready", async (client) => {
+		bot.once(Events.ClientReady, async (client) => {
 			setInterval(this.syncRoles.bind(this), 10 * 60 * 1000); // every 10 minutes
 			void this.syncRoles();
 			for (const server of this.config.servers) {

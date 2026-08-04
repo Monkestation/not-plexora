@@ -3,6 +3,7 @@ import type { AroxelpClient } from "../Aroxelp";
 import BaseModule from "./BaseModule";
 import type { PlexoraDiscordLink } from "./Plexora";
 import SS13Database, { type SS13PlayerData } from "./SS13Database";
+import { sleep } from "../other";
 
 type ServerConfig = {
 	guildId: string;
@@ -22,6 +23,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 	constructor(bot: AroxelpClient) {
 		super(bot);
 		bot.once(Events.ClientReady, async (client) => {
+			await sleep(2_000);
 			setInterval(this.syncRoles.bind(this), 10 * 60 * 1000); // every 10 minutes
 			void this.syncRoles();
 			this.logger.info("Checking permissions and validity of roles...");

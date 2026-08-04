@@ -24,7 +24,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		super(bot);
 		bot.once(Events.ClientReady, async (client) => {
 			await sleep(2_000);
-			setInterval(this.syncRoles.bind(this), 10 * 60 * 1000); // every 10 minutes
+			setInterval(this.syncRoles.bind(this), 60 * 60 * 1000); // every 60 minutes
 			void this.syncRoles();
 			this.logger.info("Checking permissions and validity of roles...");
 			for (const server of this.config.servers) {

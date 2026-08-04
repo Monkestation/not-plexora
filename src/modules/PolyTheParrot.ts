@@ -1,6 +1,6 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
-import { MessageFlags, WebhookClient } from "discord.js";
+import { Events, MessageFlags, WebhookClient } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp.js";
 import { getTimeText, pickRandomInArray, randomBetween } from "../other.js";
 import BaseModule from "./BaseModule.js";
@@ -56,7 +56,7 @@ export default class PolyTheParrot extends BaseModule<Config> {
 			/node has been researched/i,
 			this.config.filter,
 		];
-		this.pickAndSend();
+		bot.once(Events.ClientReady, this.pickAndSend.bind(this));
 	}
 
 	async pickAndSend() {

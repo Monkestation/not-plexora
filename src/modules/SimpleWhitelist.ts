@@ -49,7 +49,7 @@ export default class SimpleWhitelist extends BaseModule<Config> {
 		this.onReady = this.onReady.bind(this);
 		bot.on(Events.InteractionCreate, this.onInteraction);
 		bot.on(Events.ChannelCreate, this.onChannelCreate);
-		void this.onReady();
+		bot.once(Events.ClientReady, this.onReady.bind(this));
 	}
 
 	async onReady() {

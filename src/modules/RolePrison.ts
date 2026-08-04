@@ -28,7 +28,7 @@ export default class RolePrison extends BaseModule<Config> {
 		super(bot);
 
 		bot.on(Events.GuildMemberUpdate, this.onMemberUpdate.bind(this));
-		void this.checkAllMembers();
+		bot.once(Events.ClientReady, this.checkAllMembers.bind(this));
 		setInterval(this.checkAllMembers.bind(this), (this.config.checkIntervalMinutes || 10) * 60 * 1000); // every 10 minutes  by default
 	}
 

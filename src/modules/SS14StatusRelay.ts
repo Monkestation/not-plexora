@@ -15,7 +15,6 @@ type Config = RelayConfig[];
 export default class SS14StatusRelay extends BaseModule<Config> {
 	constructor(bot: AroxelpClient) {
 		super(bot);
-		this.bot = bot;
 		this.bot.on(Events.MessageCreate, async (message) => this.handleMessage(message));
 	}
 

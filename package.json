@@ -10,7 +10,8 @@
 		"biome:all": "biome check --write",
 		"biome:lint": "biome lint --write",
 		"biome:format": "biome format --write",
-		"clean": "rm logs/*; rm data/*;"
+		"clean": "rm logs/*; rm data/*;",
+		"buildjsonschema": "typescript-json-schema --esModuleInterop --ignoreErrors --excludePrivate tsconfig.json -o config.schema.json AroxelpConfig"
 	},
 	"keywords": [],
 	"author": "",
@@ -21,7 +22,10 @@
 		"@types/node": "^25.3.3",
 		"discord.js": "^14.25.1",
 		"dotenv": "^17.3.1",
+		"knex": "^3.3.0",
+		"mysql2": "^3.23.2",
 		"triple-beam": "^1.4.1",
+		"typescript-json-schema": "^0.68.0",
 		"winston": "^3.19.0",
 		"winston-transport": "^4.9.0"
 	},

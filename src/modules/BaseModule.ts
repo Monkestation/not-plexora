@@ -5,6 +5,7 @@ import type { AroxelpClient } from "../Aroxelp";
 import logger from "../logger";
 import fs from "node:fs";
 import path from "node:path"
+import { hasPath } from "../other";
 
 type InteractionExecutor<T extends Interaction> = (interaction: T) => Promise<void>;
 
@@ -74,5 +75,19 @@ ${err.stack ?? ""}`,
 
 		await fs.promises.mkdir(folderPath, { recursive: true });
 		return folderPath;
+	}
+
+	static baseValidator(config: any) {
+		const reasons = [];
+		if (!this.requiredConfigKeys) {
+			return
+		}
+
+		for (const key of this.requiredConfigKeys) {
+			if (!hasPath(config, key)) {
+				reasons.push(`Missing required config key: ${key}`);
+			}
+		}
+		return reasons;
 	}
 }

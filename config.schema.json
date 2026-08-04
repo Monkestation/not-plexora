@@ -1,0 +1,261 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "Config_6": {
+            "type": "object"
+        },
+        "Record<string,string>": {
+            "type": "object"
+        }
+    },
+    "properties": {
+        "modules": {
+            "properties": {
+                "ForwardedMessageManager": {
+                    "properties": {
+                        "forwards": {
+                            "items": {
+                                "properties": {
+                                    "disableAvatar": {
+                                        "type": "boolean"
+                                    },
+                                    "disableUsername": {
+                                        "type": "boolean"
+                                    },
+                                    "ignoreRegex": {
+                                        "type": "string"
+                                    },
+                                    "sourceChannelId": {
+                                        "type": "string"
+                                    },
+                                    "sourceGuildId": {
+                                        "type": "string"
+                                    },
+                                    "webhookUrl": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                },
+                "PatreonRoleSyncer": {
+                    "properties": {
+                        "servers": {
+                            "items": {
+                                "properties": {
+                                    "databaseIds": {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "guildId": {
+                                        "type": "string"
+                                    },
+                                    "syncs": {
+                                        "$ref": "#/definitions/Record%3Cstring%2Cstring%3E"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                },
+                "Plexora": {
+                    "properties": {
+                        "apiKey": {
+                            "type": "string"
+                        },
+                        "apiUrl": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "PolyTheParrot": {
+                    "properties": {
+                        "filepath": {
+                            "type": "string"
+                        },
+                        "filter": {
+                            "type": "string"
+                        },
+                        "maxIntervalMinutes": {
+                            "type": "number"
+                        },
+                        "minIntervalMinutes": {
+                            "type": "number"
+                        },
+                        "webhookUrl": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "RolePrison": {
+                    "properties": {
+                        "checkIntervalMinutes": {
+                            "description": "How often to check members for blacklist role, in minutes. Default is 10.",
+                            "type": "number"
+                        },
+                        "prisons": {
+                            "description": "Configuration for the prison",
+                            "items": {
+                                "properties": {
+                                    "blacklistRole": {
+                                        "description": "Roles that will get you put into the role prison",
+                                        "type": "string"
+                                    },
+                                    "guildId": {
+                                        "type": "string"
+                                    },
+                                    "whitelistRoles": {
+                                        "description": "List of roles that are exempt from being removed",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                },
+                "SS13Database": {
+                    "$ref": "#/definitions/Config_6"
+                },
+                "SS13PreferencesImporter": {
+                    "properties": {
+                        "AdminRoleIDs": {
+                            "description": "Admins that can approve import requests",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "Instructions": {
+                            "description": "Message sent when a new channel created under the TicketCategoryChannelID category is made",
+                            "type": "string"
+                        },
+                        "MissingLinkMessage": {
+                            "description": "Message sent if a user does not have a Discord link record (Plexora reliant)",
+                            "type": "string"
+                        },
+                        "PlayerDataFolder": {
+                            "description": "Folder on disk that is the root of player saves on the ss13 server",
+                            "type": "string"
+                        },
+                        "PlexoraServerID": {
+                            "description": "Server ID in Plexoras config",
+                            "type": "string"
+                        },
+                        "TicketCategoryChannelID": {
+                            "description": "Category ID that ticketsbot (or a similar ticket system) uses to create new tickets under. This module will listen for new channels here and send instructions.",
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "SS14StatusRelay": {
+                    "items": {
+                        "properties": {
+                            "apiEndpoint": {
+                                "type": "string"
+                            },
+                            "apiKey": {
+                                "type": "string"
+                            },
+                            "includeRegex": {
+                                "type": "string"
+                            },
+                            "sourceChannelId": {
+                                "type": "string"
+                            },
+                            "subtitle": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "type": "array"
+                },
+                "SimpleWhitelist": {
+                    "properties": {
+                        "AdminRoleIDs": {
+                            "description": "Admins that can approve whitelist requests",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "ChannelCheckIgnoreIDs": {
+                            "description": "Array of IDs (users, users with roles) that should be ignored when checking permissions",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "CreationChannelID": {
+                            "description": "Channel ID that should be ignored when scanning for tickets n shit.",
+                            "type": "string"
+                        },
+                        "TicketCategoryChannelID": {
+                            "description": "Category ID that ticketsbot (or a similar ticket system) uses to create new tickets under.",
+                            "type": "string"
+                        },
+                        "WhitelistedRoleID": {
+                            "description": "The role to give the user when approved by an admin",
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "TicketChannelRenamer": {
+                    "properties": {
+                        "rules": {
+                            "items": {
+                                "properties": {
+                                    "append": {
+                                        "type": "string"
+                                    },
+                                    "embedFind": {
+                                        "properties": {
+                                            "field": {
+                                                "type": "string"
+                                            },
+                                            "find": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "parentCategory": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "token": {
+            "type": "string"
+        }
+    },
+    "type": "object"
+}
+

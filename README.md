@@ -120,3 +120,14 @@ Config example:
 	]
 },
 ```
+
+# Creating a new module
+
+Use the template at [`src/modules/Template.ts`](src/modules/Template.ts) and rename it to the name you want you module. This should match the class name as well.
+Add your module to the master config type here [`src/types/config.d.ts`](src/types/config.d.ts) like so:
+
+```ts
+MyModuleName: import("../modules/MyModuleName").default["config"];
+```
+
+And if possible, add an entry to the [example config](config.example.jsonc)

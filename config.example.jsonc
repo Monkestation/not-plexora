@@ -1,0 +1,101 @@
+{
+	"$schema": "config.schema.json",
+	"token": "",
+	"modules": {
+		"ForwardedMessageManager": {
+			"forwards": [
+				{
+					"sourceGuildId": "YOUR_SOURCE_GUILD_ID",
+					"sourceChannelId": "YOUR_SOURCE_CHANNEL_ID",
+					"webhookUrl": "YOUR_WEBHOOK_URL_HERE",
+					"disableAvatar": true,
+					"disableUsername": true,
+					"ignoreRegex": "<.+?>"
+				}
+			]
+		},
+		"PatreonRoleSyncer": {
+			"servers": [
+				{
+					"databaseIds": [
+						"deadbeef",
+						"beadfeef"
+					],
+					"guildId": "127836512876531231212",
+					"syncs": {
+						"PATREON_TIER_ID": "DISCORD_ROLE_ID",
+						"PATREON_TIER_ID2": "DISCORD_ROLE_ID",
+						"PATREON_TIER_ID3": "DISCORD_ROLE_ID"
+					}
+				}
+			]
+		},
+		"Plexora": {
+			"apiKey": "meowmeow",
+			"apiUrl": "https://127.0.0.1:43031"
+		},
+		// Tickets-like bot based whitelist approval bot that just gives you a role when an admin approves it
+		"SimpleWhitelist": {
+			"TicketCategoryChannelID": "1460138172366789958",
+			"AdminRoleIDs": [
+				"1460046046625482177", // Headmin
+				"1460076451139312834", // Advisor
+				"1460045866366716763", // Sysadmin
+				"1460045068423301529" // Admin,
+			],
+			"WhitelistedRoleID": "1460048273768468176",
+			"CreationChannelID": "1460181928451249469",
+			"ChannelCheckIgnoreIDs": [
+				// "1460046046625482177", // Headmin
+				// "1460076451139312834", // Advisor
+				// "1460045866366716763", // Sysadmin
+				// "1460045068423301529", // Admin,
+			]
+		},
+		"PolyTheParrot": {
+			"filepath": "/opt/ss13/data/npc_saves/Poly.json",
+			"webhookUrl": "oh shit",
+			"minIntervalMinutes": 10,
+			"maxIntervalMinutes": 45,
+			"filter": "meow|asshole"
+		},
+		"SS13Database": {
+			"meowmeow": "mysql://aroxelp:securepsswrdord@127.0.0.1:3306/mystationdb"
+		},
+		// Tickets-like bot based SS13 (TG-style) preferences importer (Relies on Plexora)
+		"SS13PreferencesImporter": {
+			"MissingLinkMessage": "You do not have a linked ckey. Please follow the instructions in <#1476801734490984633>",
+			"TicketCategoryChannelID": "1476803413235994847",
+			"AdminRoleIDs": [
+				"1460046046625482177", // Headmin
+				"1460076451139312834", // Advisor
+				"1460045866366716763", // Sysadmin
+				"1460045068423301529" // Admin,
+			],
+			"PlayerDataFolder": "/opt/ss13/instances/monkestation/game/data/player_Saves",
+			"PlexoraServerID": "25c35d45",
+			"Instructions": "Make sure you have your preferences.json file on hand. Don't have it?\nJoin IrisStation, then click the OOC tab, and find the 'Export Preferences' verb.\nOnce you have that, upload it here! (Assuming your Discord is linked to the game server)"
+		},
+		"SS14StatusRelay": [
+			{
+				"sourceChannelId": "YOUR_SOURCE_CHANNEL_ID",
+				"apiEndpoint": "http://<server_ip>:1212/admin/announce",
+				"apiKey": "[REDACTED]",
+				"includeRegex": "<(?:all|ss14)>\\s*",
+				"subtitle": "Server"
+			}
+		],
+		"TicketChannelRenamer": {
+			"rules": [
+				{
+					"parentCategory": "1212567797276737566",
+					"embedFind": {
+						"field": "Server",
+						"find": "monke|monkestation|mrp"
+					},
+					"append": "monke"
+				}
+			]
+		}
+	}
+}

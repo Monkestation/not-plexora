@@ -100,7 +100,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				return
 			}
 			const userArray = [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))];
-			this.logger.debug(`Fetching guild members: ${userArray.join("")}`);
+			this.logger.debug(`Fetching guild members: ${userArray.join(" ")}`);
 
 
 			await guild.members
@@ -117,13 +117,17 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				if (!playerData.gameData.patreon_rank || ["None", "", "UNSUBBED"].includes(playerData.gameData.patreon_rank)) {
 					try {
 						const rolesToRemove = Object.values(server.syncs).filter((roleId) => member.roles.cache.has(roleId));
-						if (rolesToRemove.length > 0) await member.roles.remove(rolesToRemove);
+						if (rolesToRemove.length > 0) {
+							this.logger.debug(`${member.id} had ${rolesToRemove.length} roles to remove - ${rolesToRemove.join()}`);
+							await member.roles.remove(rolesToRemove);
+						};
 					} catch (error) {
 						this.logger.error(`Error removing role(s) from ${ckey} (${member.id})`, error);
 					}
 					continue;
 				}
 				if (!(playerData.gameData.patreon_rank in server.syncs)) {
+					this.logger.debug(`${playerData.gameData.patreon_rank} not in ${server.guildId} syncs for user ${ckey} (${member.id})`);
 					continue;
 				}
 				const rankRoleId = server.syncs[playerData.gameData.patreon_rank];
@@ -140,10 +144,13 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 					);
 					if (rolesToRemove.length > 0) await member.roles.remove(rolesToRemove);
 
-					if (member.roles.resolve(resolvedRole.id)) continue;
+					if (member.roles.resolve(resolvedRole.id)) {
+						this.logger.debug(`User ${ckey} (${member.id}) already had ${rankId}/${rankRoleId}`);
+						continue;
+					};
 
 					await member.roles.add(resolvedRole);
-					memberUpdateCount++
+					memberUpdateCount++;
 				} catch (error) {
 					this.logger.error(
 						`Error assigning discord role ${rankRoleId} for rank ${rankId} for user ${ckey} (${member.id})`,

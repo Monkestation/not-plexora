@@ -24,6 +24,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		bot.once(Events.ClientReady, async (client) => {
 			setInterval(this.syncRoles.bind(this), 10 * 60 * 1000); // every 10 minutes
 			void this.syncRoles();
+			this.logger.info("Checking permissions and validity of roles...")
 			for (const server of this.config.servers) {
 				const guild = await client.guilds.fetch(server.guildId).catch(() => null);
 				if (!guild) {
@@ -49,6 +50,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 	}
 
 	async syncRoles() {
+		this.logger.info("Syncing roles for servers.");
 		for (const server of this.config.servers) {
 			const guild = await this.bot.guilds.fetch(server.guildId).catch(() => null);
 			if (!guild)

@@ -312,7 +312,7 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			if (existingPreferencesPath) {
 				const existingPreferences = await readFile(existingPreferencesPath);
 				await interaction.followUp({
-					content: `<@${interaction.user.id}> Approved this character import.\nCharacter import processed successfully. Attached below are your old preferences on the server. You can now connect to the server. You may close this ticket.`,
+					content: `<@${interaction.user.id}> Approved this character import.\nCharacter import processed successfully. Attached below are your old preferences on the server. If you connected to the server during the current round, you **MUST** wait until the next round, otherwise joining now will overwrite the preferences you just imported. If you havent joined at all this round, then you are free to do so now!`,
 					files: [
 						new AttachmentBuilder(existingPreferences, {
 							name: `${userRecord.ckey}_preferences.old.json`,

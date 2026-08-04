@@ -37,7 +37,7 @@ export class AroxelpClient extends Client {
 		this.config = config;
 	}
 
-	public init() {
+	public async init() {
 		try {
 			if (!existsSync(DATA_FOLDER)) {
 				mkdirSync(DATA_FOLDER);
@@ -45,8 +45,8 @@ export class AroxelpClient extends Client {
 
 			void this.login(this.config.token);
 
+			await this.loadModules(MODULES_DIRECTORY);
 			this.once("clientReady", async () => {
-				await this.loadModules(MODULES_DIRECTORY);
 				logger.info(`Logged in as ${this.user?.tag} in ${this.guilds.cache.size}`);
 				logger.info(`${this.modules.size} modules loaded:`);
 				for (const module of this.modules.values()) {

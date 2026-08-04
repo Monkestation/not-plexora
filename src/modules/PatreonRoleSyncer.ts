@@ -110,7 +110,10 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 			this.logger.debug("Looping through player data map");
 			for (const [ckey, playerData] of playerDataMap) {
 				this.logger.debug(`Fetching discord member data for ${ckey}`)
-				const member = await guild.members.fetch(playerData.discordLink.discord_id).catch(() => null);
+				const member = await guild.members.fetch(playerData.discordLink.discord_id).catch((error) => {
+					this.logger.error(error);
+					return null;
+				});
 				if (!member) {
 					this.logger.debug(`No member for ckey ${ckey} with discordid '${playerData.discordLink.discord_id}'`);
 					continue;

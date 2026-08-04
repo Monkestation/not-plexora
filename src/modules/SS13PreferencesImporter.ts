@@ -19,7 +19,7 @@ import {
 import type { AroxelpClient } from "../Aroxelp";
 import { parseByondKey, safeAccess, sleep } from "../other";
 import BaseModule from "./BaseModule";
-import { Plexora } from "./Plexora";
+import Plexora from "./Plexora";
 
 type Config = {
 	/** Message sent when a new channel created under the TicketCategoryChannelID category is made */
@@ -202,11 +202,11 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			.setTitle(`SS13 Preferences Import for ${ckey}`)
 			.setDescription(
 				`Savefile Version: ${version}\n` +
-					`**Character Count:** ${characters.length}\n` +
-					`**Enabled antags:** ${antags}\n` +
-					// ourgh
-					`**Character names (Real):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}` +
-					`\n\n**Characters with Headshot:**\n${headshots}`,
+				`**Character Count:** ${characters.length}\n` +
+				`**Enabled antags:** ${antags}\n` +
+				// ourgh
+				`**Character names (Real):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}` +
+				`\n\n**Characters with Headshot:**\n${headshots}`,
 			)
 			.setColor(0x860069);
 

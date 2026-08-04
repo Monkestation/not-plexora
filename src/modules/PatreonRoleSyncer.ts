@@ -24,7 +24,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		bot.once(Events.ClientReady, async (client) => {
 			setInterval(this.syncRoles.bind(this), 10 * 60 * 1000); // every 10 minutes
 			void this.syncRoles();
-			this.logger.info("Checking permissions and validity of roles...")
+			this.logger.info("Checking permissions and validity of roles...");
 			for (const server of this.config.servers) {
 				const guild = await client.guilds.fetch(server.guildId).catch(() => null);
 				if (!guild) {
@@ -45,17 +45,20 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 						);
 					}
 				}
+				this.logger.info(`Finished checks for ${server.guildId}`);
 			}
 		});
 	}
 
 	async syncRoles() {
 		this.logger.info("Syncing roles for servers.");
+		let memberUpdateCount = 0;
 		for (const server of this.config.servers) {
 			const guild = await this.bot.guilds.fetch(server.guildId).catch(() => null);
-			if (!guild)
-				// lets not waste our time.
+			if (!guild) {
+				this.logger.warn(`Guild '${server.guildId}' couldn't be resolved.`);
 				continue;
+			}
 			const playerDataMap = new Map<string, { discordLink: PlexoraDiscordLink; gameData: SS13PlayerData }>();
 			for (const databaseId of server.databaseIds) {
 				const ORM = this.bot.getModule(SS13Database).getORM(databaseId);
@@ -63,9 +66,10 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 					.select("*")
 					.where("valid", 1)
 					.andWhereNot("discord_id", null);
-				if (discordLinks.length === 0)
-					// bruh?
+				if (discordLinks.length === 0) {
+					this.logger.warn(`No Discord links for database '${databaseId}'`);
 					continue;
+				}
 				const players = await ORM<SS13PlayerData>("player")
 					.select("*")
 					.whereIn(
@@ -83,9 +87,10 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 					});
 				}
 			}
-			if (playerDataMap.size === 0)
-				// surprising
-				continue;
+			if (playerDataMap.size === 0) {
+				this.logger.warn(`Player data map size for ${server.guildId} was 0`);
+				return
+			}
 			await guild.members
 				// i only want unique discord IDs
 				.fetch({ user: [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))] })
@@ -122,6 +127,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 					if (member.roles.resolve(resolvedRole.id)) continue;
 
 					await member.roles.add(resolvedRole);
+					memberUpdateCount++
 				} catch (error) {
 					this.logger.error(
 						`Error assigning discord role ${rankRoleId} for rank ${rankId} for user ${ckey} (${member.id})`,
@@ -130,5 +136,6 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				}
 			}
 		}
+		this.logger.info("Sync finished.");
 	}
 }

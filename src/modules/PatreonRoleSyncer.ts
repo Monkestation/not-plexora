@@ -56,6 +56,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		this.logger.info("Syncing roles for servers.");
 		let memberUpdateCount = 0;
 		for (const server of this.config.servers) {
+			this.logger.info(`Syncing for server '${server.guildId}'`);
 			const guild = await this.bot.guilds.fetch(server.guildId).catch(() => null);
 			if (!guild) {
 				this.logger.warn(`Guild '${server.guildId}' couldn't be resolved.`);
@@ -63,11 +64,14 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 			}
 			const playerDataMap = new Map<string, { discordLink: PlexoraDiscordLink; gameData: SS13PlayerData }>();
 			for (const databaseId of server.databaseIds) {
+				this.logger.debug(`Syncing for server '${server.guildId}'`);
+
 				const ORM = this.bot.getModule(SS13Database).getORM(databaseId);
 				const discordLinks = await ORM<PlexoraDiscordLink>("discord_links")
 					.select("*")
 					.where("valid", 1)
 					.andWhereNot("discord_id", null);
+				this.logger.debug(`Discord links: ${discordLinks.length}`);
 				if (discordLinks.length === 0) {
 					this.logger.warn(`No Discord links for database '${databaseId}'`);
 					continue;
@@ -78,6 +82,8 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 						"ckey",
 						discordLinks.map((p) => p.ckey),
 					);
+				this.logger.debug(`Players: ${discordLinks.length}`);
+
 				const discordLinkMap = new Map(discordLinks.map((link) => [link.ckey, link]));
 				for (const player of players) {
 					const discordLink = discordLinkMap.get(player.ckey);
@@ -93,13 +99,18 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				this.logger.warn(`Player data map size for ${server.guildId} was 0`);
 				return
 			}
+			this.logger.debug(`Fetching guild members`);
+
 			await guild.members
 				// i only want unique discord IDs
 				.fetch({ user: [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))] })
 				.catch(() => null);
 			for (const [ckey, playerData] of playerDataMap) {
 				const member = await guild.members.fetch(playerData.discordLink.discord_id).catch(() => null);
-				if (!member) continue;
+				if (!member) {
+					this.logger.debug(`No member for ckey ${ckey} with discordid '${playerData.discordLink.discord_id}'`);
+					continue;
+				};
 				if (!playerData.gameData.patreon_rank || ["None", "", "UNSUBBED"].includes(playerData.gameData.patreon_rank)) {
 					try {
 						const rolesToRemove = Object.values(server.syncs).filter((roleId) => member.roles.cache.has(roleId));

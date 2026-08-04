@@ -105,7 +105,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 
 			const memberCollection = await guild.members
 				// i only want unique discord IDs
-				.fetch({ user: userArray })
+				.fetch()
 				.catch((err) => {
 					this.logger.error(`Error fetching users`, err)
 					return null;

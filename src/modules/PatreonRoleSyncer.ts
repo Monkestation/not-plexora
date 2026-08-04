@@ -109,11 +109,13 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				.catch(() => null);
 			this.logger.debug("Looping through player data map");
 			for (const [ckey, playerData] of playerDataMap) {
+				this.logger.debug(`Fetching discord member data for ${ckey}`)
 				const member = await guild.members.fetch(playerData.discordLink.discord_id).catch(() => null);
 				if (!member) {
 					this.logger.debug(`No member for ckey ${ckey} with discordid '${playerData.discordLink.discord_id}'`);
 					continue;
 				};
+				this.logger.debug(`Checking for unsubscribed rank ${ckey}`);
 				if (!playerData.gameData.patreon_rank || ["None", "", "UNSUBBED"].includes(playerData.gameData.patreon_rank)) {
 					try {
 						const rolesToRemove = Object.values(server.syncs).filter((roleId) => member.roles.cache.has(roleId));

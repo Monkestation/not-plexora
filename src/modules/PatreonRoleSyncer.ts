@@ -136,6 +136,6 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				}
 			}
 		}
-		this.logger.info("Sync finished.");
+		this.logger.info(`Sync finished - updated ${memberUpdateCount} members roles.`);
 	}
 }

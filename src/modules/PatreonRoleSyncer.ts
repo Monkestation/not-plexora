@@ -114,6 +114,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				this.logger.warn(`Member collection for ${server.guildId} was null`);
 				continue;
 			}
+			this.logger.debug(`Fetched ${memberCollection.size} members for guild ${server.guildId}`);
 			this.logger.debug("Looping through player data map");
 			for (const [ckey, playerData] of playerDataMap) {
 				this.logger.debug(`Fetching discord member data for ${ckey}`)

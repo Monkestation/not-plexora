@@ -99,12 +99,15 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				this.logger.warn(`Player data map size for ${server.guildId} was 0`);
 				return
 			}
-			this.logger.debug(`Fetching guild members`);
+			const userArray = [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))];
+			this.logger.debug(`Fetching guild members: ${userArray.join("")}`);
+
 
 			await guild.members
 				// i only want unique discord IDs
-				.fetch({ user: [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))] })
+				.fetch({ user: userArray })
 				.catch(() => null);
+			this.logger.debug("Looping through player data map");
 			for (const [ckey, playerData] of playerDataMap) {
 				const member = await guild.members.fetch(playerData.discordLink.discord_id).catch(() => null);
 				if (!member) {

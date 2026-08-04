@@ -3,6 +3,8 @@
 import { Colors, EmbedBuilder, type Interaction } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
 import logger from "../logger";
+import fs from "node:fs";
+import path from "node:path"
 
 type InteractionExecutor<T extends Interaction> = (interaction: T) => Promise<void>;
 
@@ -16,12 +18,15 @@ export default class BaseModule<Config = object | null> {
 	static requiredConfigKeys?: string[] = [];
 
 	static dependsOn?: readonly (typeof BaseModule<any>)[];
+	/** Returns an array of config errors if present */
+	static configValidator?: (config: any) => string[];
 	logger: typeof logger;
 
 	constructor(bot: AroxelpClient) {
 		this.config = bot.config.modules[this.constructor.name as keyof typeof bot.config.modules] as unknown as Config;
 		this.bot = bot;
 		this.logger = logger.child({ module: this.constructor.name });
+
 	}
 
 	wrapInteractionHandler<T extends Interaction>(executor: InteractionExecutor<T>, logger: { error: (msg: string) => void }) {
@@ -61,5 +66,13 @@ ${err.stack ?? ""}`,
 				}
 			}
 		};
+	}
+
+	async getDataFolderPath() {
+		// create the folder based on the name of the class
+		const folderPath = `${path.join(import.meta.url, "..", "..", "data")}/${this.constructor.name}`;
+
+		await fs.promises.mkdir(folderPath, { recursive: true });
+		return folderPath;
 	}
 }

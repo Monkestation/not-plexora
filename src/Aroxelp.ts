@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 import { DATA_FOLDER, MODULES_DIRECTORY, moduleFiletypeRegex } from "./constants";
 import logger from "./logger";
 import BaseModule from "./modules/BaseModule";
+import { hasPath } from "./other";
 
 let config: AroxelpConfig;
 try {
@@ -188,7 +189,19 @@ export class AroxelpClient extends Client {
 			return { type: "silent-failure" };
 		}
 
-		// required config keys
+		if (module.configValidator) {
+			const validatorErrors = module.configValidator(moduleConfig);
+			reasons.push(...validatorErrors);
+		} else if (module.requiredConfigKeys) {
+			for (const key of module.requiredConfigKeys) {
+				if (!hasPath(moduleConfig, key)) {
+					reasons.push(`Missing required config key: ${key}`);
+				}
+			}
+		}
+
+		// Previous implementation
+		/*
 		if (module.requiredConfigKeys?.length) {
 			for (const key of module.requiredConfigKeys) {
 				if (moduleConfig[key as keyof typeof moduleConfig] === undefined) {
@@ -199,6 +212,8 @@ export class AroxelpClient extends Client {
 				return { type: "permanent-failure", reasons };
 			}
 		}
+		*/
+
 
 		// Dependencies
 		if (module.dependsOn?.length) {
@@ -228,10 +243,14 @@ export class AroxelpClient extends Client {
 			}
 		}
 
+		if (reasons.length > 0) {
+			return { type: "permanent-failure", reasons };
+		}
+
 		return true;
 	}
 
-	getModule<T = BaseModule>(module: { new (bot: AroxelpClient): T }): T {
+	getModule<T = BaseModule>(module: { new(bot: AroxelpClient): T }): T {
 		const name = module.name.toLowerCase();
 
 		const foundModule = this.modules.get(name);

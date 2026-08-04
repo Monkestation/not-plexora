@@ -56,3 +56,29 @@ export async function safeAccess(path: string) {
 		return false;
 	}
 }
+
+/**
+ * Checks if an object has a specific path of keys, supporting nested keys and wildcards for arrays.
+ * @param obj Source object to check for keys
+ * @param path path to check for, can be nested using dot notation, and can use * to check for all elements in an array
+ * @example hasPath(obj, "a.b.c") // checks if obj.a.b.c exists
+ * @example hasPath(obj, "a.b.*.c") // checks if obj.a.b is an array and all elements have a c property
+ * @returns
+ */
+export function hasPath(obj: any, path: string): boolean {
+	const parts = path.split(".");
+	function walk(current: any, index: number): boolean {
+		if (index >= parts.length) {
+			return current !== undefined;
+		}
+		const part = parts[index];
+		if (part === "*") {
+			if (!Array.isArray(current)) {
+				return false;
+			}
+			return current.every(item => walk(item, index + 1));
+		}
+		return walk(current?.[part], index + 1);
+	}
+	return walk(obj, 0);
+}

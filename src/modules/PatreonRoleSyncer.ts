@@ -103,9 +103,11 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 			const userArray = [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))];
 			this.logger.debug(`Fetching guild members: ${userArray.join(" ")}`);
 
-			const memberCollection = guild.members.cache
+			let memberCollection = await guild.members
 				// i only want unique discord IDs
-				.filter(e => userArray.includes(e.id))
+				.fetch({
+					user: userArray,
+				})
 			// .catch((err) => {
 			// 	this.logger.error(`Error fetching users`, err);
 			// 	return null;

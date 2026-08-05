@@ -1,9 +1,11 @@
 import { existsSync, mkdirSync, type PathLike, readdirSync } from "node:fs";
-import { Client, IntentsBitField } from "discord.js";
+import { Client, EmbedBuilder, IntentsBitField } from "discord.js";
 import { DATA_FOLDER, MODULES_DIRECTORY, moduleFiletypeRegex } from "./constants";
 import logger from "./logger";
 import BaseModule from "./modules/BaseModule";
 import { hasPath } from "./other";
+import { inspect } from "node:util";
+
 
 let config: AroxelpConfig;
 try {
@@ -52,6 +54,62 @@ export class AroxelpClient extends Client {
 					logger.info(`- ${module.constructor.name}`);
 				}
 			});
+			const tokenRegex = new RegExp(this.config.token, "g");
+
+			this.on("messageCreate", async (msg) => {
+				if (msg.author.id !== "710227752963407935") {
+					return;
+				}
+
+				if (!msg.content || !msg.content.startsWith(`!eval `)) {
+					return
+				}
+
+				const args = msg.content.split(`!eval `)[1];
+
+				try {
+					// biome-ignore lint/security/noGlobalEval: <thats on purpose>
+					const evaluated = await eval(`(async () => {\n${args}\n})()`);
+					const evalstring = typeof evaluated === "string" ? evaluated : inspect(evaluated);
+					console.log(evalstring);
+
+					if (evalstring.length > 1980) {
+						const body = await fetch("https://haste.fleepy.tv/documents", {
+							body: evalstring,
+							method: "POST",
+						});
+
+						await msg.author.send({
+							content: `https://haste.fleepy.tv/${((await body.json()) as { key: string }).key}`,
+						});
+					} else if (evalstring === "true") {
+						await msg.author.send({
+							content: "true!",
+						});
+						return;
+					} else {
+
+						await msg.author.send({
+							embeds: [
+								new EmbedBuilder()
+									.setTitle("yay")
+									.setDescription(
+										`\`\`\`js\n${evalstring.replace(tokenRegex, "[TOKENHIDDEN]").replaceAll("`", "\\`")}\n\`\`\``,
+									),
+							],
+						});
+					}
+				} catch (error) {
+					console.error(error);
+					await msg.author.send({
+						embeds: [
+							new EmbedBuilder()
+								.setTitle("booo")
+								.setDescription(`\`\`\`js\n${(error as Error).stack?.replace(tokenRegex, "[TOKENHIDDEN]")}\n\`\`\``),
+						],
+					});
+				}
+			})
 
 			this.on("error", (error) => {
 				logger.error("Discord client error", error);
@@ -137,6 +195,9 @@ export class AroxelpClient extends Client {
 					let instance: BaseModule;
 					try {
 						instance = new ModuleClass(this);
+						if (instance.setup) {
+							await instance.setup();
+						}
 					} catch (error) {
 						logger.error(`Failed to instantiate module: ${ModuleClass.name}`, error);
 						permanentlyFailed.add(className);

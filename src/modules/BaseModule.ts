@@ -31,6 +31,9 @@ export default class BaseModule<Config = object | null> {
 		this.logger = logger.child({ module: this.constructor.name });
 	}
 
+	/** Runs after construction, before the next module is loaded and the bot is logged in. */
+	setup?: () => Promise<void>;
+
 	wrapInteractionHandler<T extends Interaction>(executor: InteractionExecutor<T>, logger: { error: (msg: string) => void }) {
 		return async (interaction: T) => {
 			try {

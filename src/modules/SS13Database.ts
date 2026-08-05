@@ -31,9 +31,20 @@ export default class SS13Database extends BaseModule<Config> {
 		super(bot);
 		this.knex = {};
 		for (const dbId in this.config) {
+			const url = new URL(this.config[dbId]);
+
 			this.knex[dbId] = Knex({
-				client: this.config[dbId].split(":")[0],
-				connection: this.config[dbId],
+				client: url.protocol.slice(0, -1), // mysql2, pg, or something else. if you host your ss13 db on sqlite im concerned.
+				connection: {
+					host: url.hostname,
+					port: url.port ? Number(url.port) : undefined,
+					user: decodeURIComponent(url.username),
+					password: decodeURIComponent(url.password),
+					database: url.pathname.slice(1),
+
+					supportBigNumbers: true,
+					bigNumberStrings: true,
+				},
 			});
 		}
 	}

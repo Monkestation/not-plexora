@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <explanation> */
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -5,6 +6,7 @@ import {
 	ButtonStyle,
 	ChannelType,
 	Events,
+	GatewayIntentBits,
 	type GuildMember,
 	type Interaction,
 	type Message,
@@ -40,6 +42,7 @@ type Config = {
  */
 export default class SimpleWhitelist extends BaseModule<Config> {
 	static requiredConfigKeys?: (keyof Config)[] = ["TicketCategoryChannelID", "WhitelistedRoleID"];
+	static intents = [GatewayIntentBits.GuildMembers];
 
 	constructor(bot: AroxelpClient) {
 		super(bot);

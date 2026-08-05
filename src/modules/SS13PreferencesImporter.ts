@@ -10,6 +10,7 @@ import {
 	Colors,
 	EmbedBuilder,
 	Events,
+	GatewayIntentBits,
 	type GuildMember,
 	type Interaction,
 	type Message,
@@ -54,6 +55,8 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 	static dependsOn = [Plexora];
 
 	static requiredConfigKeys: (keyof Config)[] = ["TicketCategoryChannelID", "PlayerDataFolder", "PlexoraServerID"];
+
+	static intents = [GatewayIntentBits.GuildMessages];
 
 	constructor(bot: AroxelpClient) {
 		super(bot);
@@ -202,11 +205,11 @@ export default class SS13PreferencesImporter extends BaseModule<Config> {
 			.setTitle(`SS13 Preferences Import for ${ckey}`)
 			.setDescription(
 				`Savefile Version: ${version}\n` +
-				`**Character Count:** ${characters.length}\n` +
-				`**Enabled antags:** ${antags}\n` +
-				// ourgh
-				`**Character names (Real):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}` +
-				`\n\n**Characters with Headshot:**\n${headshots}`,
+					`**Character Count:** ${characters.length}\n` +
+					`**Enabled antags:** ${antags}\n` +
+					// ourgh
+					`**Character names (Real):** ${characters.map((e) => (e as { real_name?: string }).real_name ?? "Unknown").join(", ")}` +
+					`\n\n**Characters with Headshot:**\n${headshots}`,
 			)
 			.setColor(0x860069);
 

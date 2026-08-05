@@ -1,5 +1,5 @@
-import { Events, GuildMember, PartialGuildMember } from "discord.js";
-import { AroxelpClient } from "../Aroxelp";
+import { Events, GatewayIntentBits, type GuildMember, type PartialGuildMember } from "discord.js";
+import type { AroxelpClient } from "../Aroxelp";
 import BaseModule from "./BaseModule";
 
 type PrisonConfig = {
@@ -23,6 +23,7 @@ type Config = {
  */
 export default class RolePrison extends BaseModule<Config> {
 	static requiredConfigKeys = ["prisons.*.guildId", "prisons.*.blacklistRole", "prisons.*.whitelistRoles", "prisons"];
+	static intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers];
 
 	constructor(bot: AroxelpClient) {
 		super(bot);
@@ -35,7 +36,7 @@ export default class RolePrison extends BaseModule<Config> {
 	async checkAllMembers() {
 		this.logger.info("Checking all guild members for blacklist roles...");
 		for (const prisonConfig of this.config.prisons) {
-			const guild = this.bot.guilds.cache.get(prisonConfig.guildId);
+			const guild = await this.bot.guilds.fetch(prisonConfig.guildId);
 			if (!guild) {
 				this.logger.warn(`Guild with ID ${prisonConfig.guildId} not found.`);
 				continue;

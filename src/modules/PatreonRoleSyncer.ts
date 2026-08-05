@@ -1,9 +1,9 @@
-import { Events } from "discord.js";
+import { Events, GatewayIntentBits } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
+import { sleep } from "../other";
 import BaseModule from "./BaseModule";
 import type { PlexoraDiscordLink } from "./Plexora";
 import SS13Database, { type SS13PlayerData } from "./SS13Database";
-import { sleep } from "../other";
 
 type ServerConfig = {
 	guildId: string;
@@ -19,6 +19,7 @@ type Config = {
 export default class PatreonRoleSyncer extends BaseModule<Config> {
 	static dependsOn = [SS13Database];
 	static requiredConfigKeys: string[] = ["servers", "servers.*.syncs", "servers.*.guildId", "servers.*.databaseIds"];
+	static intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers];
 
 	constructor(bot: AroxelpClient) {
 		super(bot);
@@ -97,17 +98,16 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 			}
 			if (playerDataMap.size === 0) {
 				this.logger.warn(`Player data map size for ${server.guildId} was 0`);
-				return
+				return;
 			}
 			const userArray = [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))];
 			this.logger.debug(`Fetching guild members: ${userArray.join(" ")}`);
 
-
 			const memberCollection = await guild.members
 				// i only want unique discord IDs
-				.fetch({ user: userArray, force: true })
+				.fetch({ user: userArray })
 				.catch((err) => {
-					this.logger.error(`Error fetching users`, err)
+					this.logger.error(`Error fetching users`, err);
 					return null;
 				});
 			if (!memberCollection) {
@@ -117,12 +117,12 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 			this.logger.debug(`Fetched ${memberCollection.size} members for guild ${server.guildId}`);
 			this.logger.debug("Looping through player data map");
 			for (const [ckey, playerData] of playerDataMap) {
-				this.logger.debug(`Fetching discord member data for ${ckey}`)
-				const member = memberCollection.get(playerData.discordLink.discord_id)
+				this.logger.debug(`Fetching discord member data for ${ckey}`);
+				const member = memberCollection.get(playerData.discordLink.discord_id);
 				if (!member) {
 					this.logger.debug(`No member for ckey ${ckey} with discordid '${playerData.discordLink.discord_id}'`);
 					continue;
-				};
+				}
 				this.logger.debug(`Checking for unsubscribed rank ${ckey}`);
 				if (!playerData.gameData.patreon_rank || ["None", "", "UNSUBBED"].includes(playerData.gameData.patreon_rank)) {
 					try {
@@ -130,7 +130,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 						if (rolesToRemove.length > 0) {
 							this.logger.debug(`${member.id} had ${rolesToRemove.length} roles to remove - ${rolesToRemove.join()}`);
 							await member.roles.remove(rolesToRemove);
-						};
+						}
 					} catch (error) {
 						this.logger.error(`Error removing role(s) from ${ckey} (${member.id})`, error);
 					}
@@ -157,7 +157,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 					if (member.roles.resolve(resolvedRole.id)) {
 						this.logger.debug(`User ${ckey} (${member.id}) already had ${rankId}/${rankRoleId}`);
 						continue;
-					};
+					}
 
 					await member.roles.add(resolvedRole);
 					memberUpdateCount++;

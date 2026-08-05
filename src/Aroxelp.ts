@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, type PathLike, readdirSync } from "node:fs";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, IntentsBitField } from "discord.js";
 import { DATA_FOLDER, MODULES_DIRECTORY, moduleFiletypeRegex } from "./constants";
 import logger from "./logger";
 import BaseModule from "./modules/BaseModule";
@@ -31,7 +31,7 @@ export class AroxelpClient extends Client {
 	config: typeof config;
 	constructor() {
 		super({
-			intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+			intents: [],
 		});
 		// Yes i know how fucking useless this is but, shut up.
 		this.config = config;
@@ -43,9 +43,8 @@ export class AroxelpClient extends Client {
 				mkdirSync(DATA_FOLDER);
 			}
 
-			void this.login(this.config.token);
-
 			await this.loadModules(MODULES_DIRECTORY);
+			this.getAndSetIntents();
 			this.once("clientReady", async () => {
 				logger.info(`Logged in as ${this.user?.tag} in ${this.guilds.cache.size}`);
 				logger.info(`${this.modules.size} modules loaded:`);
@@ -57,9 +56,20 @@ export class AroxelpClient extends Client {
 			this.on("error", (error) => {
 				logger.error("Discord client error", error);
 			});
+
+			await this.login(this.config.token);
 		} catch (error) {
 			logger.error(`An error occured while initializing Aroxelp`, error);
 		}
+	}
+
+	getAndSetIntents() {
+		const intents = new IntentsBitField(this.options.intents);
+		for (const [, module] of this.modules) {
+			const moduleIntents = (module.constructor as typeof BaseModule).intents;
+			if (moduleIntents) intents.add(moduleIntents);
+		}
+		this.options.intents = intents;
 	}
 
 	async loadModules(directory: PathLike) {
@@ -213,7 +223,6 @@ export class AroxelpClient extends Client {
 			}
 		}
 		*/
-
 
 		// Dependencies
 		if (module.dependsOn?.length) {

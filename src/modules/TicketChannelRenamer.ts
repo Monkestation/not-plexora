@@ -1,4 +1,4 @@
-import { ChannelType, Events, type GuildChannel, type Message, type TextChannel } from "discord.js";
+import { ChannelType, Events, GatewayIntentBits, type GuildChannel, type Message, type TextChannel } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp.js";
 import BaseModule from "./BaseModule.js";
 
@@ -17,6 +17,8 @@ type Config = {
 
 export default class TicketChannelRenamer extends BaseModule<Config> {
 	ticketRegex: RegExp;
+	static intents = [GatewayIntentBits.Guilds];
+
 	constructor(bot: AroxelpClient) {
 		super(bot);
 		this.ticketRegex = /ticket-\d*/gi;

@@ -76,7 +76,7 @@ export function hasPath(obj: any, path: string): boolean {
 			if (!Array.isArray(current)) {
 				return false;
 			}
-			return current.every(item => walk(item, index + 1));
+			return current.every((item) => walk(item, index + 1));
 		}
 		return walk(current?.[part], index + 1);
 	}

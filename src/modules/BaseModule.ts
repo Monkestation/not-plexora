@@ -1,10 +1,10 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: *explodes you* */
 
-import { Colors, EmbedBuilder, type Interaction } from "discord.js";
+import fs from "node:fs";
+import path from "node:path";
+import { type BitFieldResolvable, Colors, EmbedBuilder, type GatewayIntentsString, type Interaction } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
 import logger from "../logger";
-import fs from "node:fs";
-import path from "node:path"
 import { hasPath } from "../other";
 
 type InteractionExecutor<T extends Interaction> = (interaction: T) => Promise<void>;
@@ -19,6 +19,8 @@ export default class BaseModule<Config = object | null> {
 	static requiredConfigKeys?: string[] = [];
 
 	static dependsOn?: readonly (typeof BaseModule<any>)[];
+
+	static intents?: BitFieldResolvable<GatewayIntentsString, number>;
 	/** Returns an array of config errors if present */
 	static configValidator?: (config: any) => string[];
 	logger: typeof logger;
@@ -27,7 +29,6 @@ export default class BaseModule<Config = object | null> {
 		this.config = bot.config.modules[this.constructor.name as keyof typeof bot.config.modules] as unknown as Config;
 		this.bot = bot;
 		this.logger = logger.child({ module: this.constructor.name });
-
 	}
 
 	wrapInteractionHandler<T extends Interaction>(executor: InteractionExecutor<T>, logger: { error: (msg: string) => void }) {
@@ -79,11 +80,11 @@ ${err.stack ?? ""}`,
 
 	static baseValidator(config: any) {
 		const reasons = [];
-		if (!this.requiredConfigKeys) {
-			return
+		if (!BaseModule.requiredConfigKeys) {
+			return;
 		}
 
-		for (const key of this.requiredConfigKeys) {
+		for (const key of BaseModule.requiredConfigKeys) {
 			if (!hasPath(config, key)) {
 				reasons.push(`Missing required config key: ${key}`);
 			}

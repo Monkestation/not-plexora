@@ -1,4 +1,4 @@
-import { Events, Message } from "discord.js";
+import { Events, GatewayIntentBits, type Message } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp.js";
 import BaseModule from "./BaseModule.js";
 
@@ -13,6 +13,8 @@ type RelayConfig = {
 type Config = RelayConfig[];
 
 export default class SS14StatusRelay extends BaseModule<Config> {
+	static intents = [GatewayIntentBits.MessageContent];
+
 	constructor(bot: AroxelpClient) {
 		super(bot);
 		this.bot.on(Events.MessageCreate, async (message) => this.handleMessage(message));
@@ -21,12 +23,10 @@ export default class SS14StatusRelay extends BaseModule<Config> {
 	async handleMessage(message: Message) {
 		if (message.author.bot || !message.inGuild()) {
 			return;
-		};
+		}
 
 		for (const relayConfig of this.config) {
-
-			if (message.channelId !== relayConfig.sourceChannelId)
-				continue;
+			if (message.channelId !== relayConfig.sourceChannelId) continue;
 
 			try {
 				const { content: parsedContent, subtitle: parsedSubtitle } = this.parseSubtitle(message.content);
@@ -38,7 +38,9 @@ export default class SS14StatusRelay extends BaseModule<Config> {
 					}
 				}
 
-				this.logger.info(`Relaying message from ${message.author.username} to SS14: "${relayedMessage}" ${parsedSubtitle ? `with subtitle: "${parsedSubtitle}"` : ""}`);
+				this.logger.info(
+					`Relaying message from ${message.author.username} to SS14: "${relayedMessage}" ${parsedSubtitle ? `with subtitle: "${parsedSubtitle}"` : ""}`,
+				);
 
 				const response = await fetch(relayConfig.apiEndpoint, {
 					method: "POST",
@@ -50,8 +52,8 @@ export default class SS14StatusRelay extends BaseModule<Config> {
 						subtitle: parsedSubtitle || relayConfig.subtitle || `System Status Update`,
 						message: relayedMessage,
 						source_url: message.url,
-						source: ` | #${message.channel.name} - From: @${message.author.username}`
-					})
+						source: ` | #${message.channel.name} - From: @${message.author.username}`,
+					}),
 				});
 
 				if (!response.ok) {

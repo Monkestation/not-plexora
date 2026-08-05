@@ -1,4 +1,4 @@
-import { ChannelType, Events, type GuildChannel, type Message, type TextChannel } from "discord.js";
+import { Events, type GuildChannel } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp.js";
 import BaseModule from "./BaseModule.js";
 import SS13Database from "./SS13Database.js";
@@ -9,7 +9,7 @@ type Config = {
 	myObjectArray: {
 		thing1: boolean;
 		thing2: string;
-	}[]
+	}[];
 };
 
 export default class Template extends BaseModule<Config> {

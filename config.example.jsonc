@@ -17,10 +17,7 @@
 		"PatreonRoleSyncer": {
 			"servers": [
 				{
-					"databaseIds": [
-						"deadbeef",
-						"beadfeef"
-					],
+					"databaseIds": ["deadbeef", "beadfeef"],
 					"guildId": "127836512876531231212",
 					"syncs": {
 						"PATREON_TIER_ID": "DISCORD_ROLE_ID",

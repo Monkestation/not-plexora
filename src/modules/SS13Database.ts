@@ -1,6 +1,6 @@
-import BaseModule from "./BaseModule";
-import { AroxelpClient } from "../Aroxelp";
 import Knex from "knex";
+import type { AroxelpClient } from "../Aroxelp";
+import BaseModule from "./BaseModule";
 
 export type SS13PlayerData = {
 	ckey: string;
@@ -20,10 +20,10 @@ export type SS13PlayerData = {
 	patreon_rank?: string;
 	twitch_rank?: string;
 	twitch_user?: string;
-}
+};
 
 // ID - connectionUrl
-type Config = Record<string, string>
+type Config = Record<string, string>;
 
 export default class SS13Database extends BaseModule<Config> {
 	knex: Record<string, Knex.Knex>;
@@ -50,10 +50,7 @@ export default class SS13Database extends BaseModule<Config> {
 		}
 
 		try {
-			const result = await knexInstance("players")
-				.select("*")
-				.where({ ckey })
-				.first();
+			const result = await knexInstance("players").select("*").where({ ckey }).first();
 
 			if (!result) {
 				return null;
@@ -74,20 +71,14 @@ export default class SS13Database extends BaseModule<Config> {
 		}
 
 		try {
-			const linkRecord = await knexInstance("discord_links")
-				.select("*")
-				.where({ discord_id: discordId })
-				.first();
+			const linkRecord = await knexInstance("discord_links").select("*").where({ discord_id: discordId }).first();
 
 			if (!linkRecord) {
 				return null;
 			}
 
 			const ckey = linkRecord.ckey;
-			const result = await knexInstance("players")
-				.select("*")
-				.where({ ckey })
-				.first();
+			const result = await knexInstance("players").select("*").where({ ckey }).first();
 
 			if (!result) {
 				return null;

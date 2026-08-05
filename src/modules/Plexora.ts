@@ -2,7 +2,7 @@
 
 import type { AroxelpClient } from "../Aroxelp";
 import BaseModule from "./BaseModule";
-import { SS13PlayerData } from "./SS13Database";
+import type { SS13PlayerData } from "./SS13Database";
 
 type Config = {
 	apiUrl: string;
@@ -38,7 +38,7 @@ export type PlexoraDiscordLink = {
 	timestamp: Date;
 	one_time_token: string;
 	valid: boolean;
-}
+};
 
 export enum PatreonRank {
 	NO_RANK = "None",
@@ -53,14 +53,13 @@ export enum PatreonRank {
 	ANOTHER_PREMIUM_RANK = "24353493",
 }
 
-
 export type PlexoraPlayerInfo = {
 	discordLinks: PlexoraDiscordLink[];
-	playerInfos: Record<string, SS13PlayerData>
-}
+	playerInfos: Record<string, SS13PlayerData>;
+};
 export type PlexoraPlayerInfoResult = {
-	players: Record<string, PlexoraPlayerInfo>
-}
+	players: Record<string, PlexoraPlayerInfo>;
+};
 
 export default class Plexora extends BaseModule<Config> {
 	requiredConfigKeys?: (keyof Config)[] = ["apiUrl", "apiKey"] as const;
@@ -179,12 +178,12 @@ export default class Plexora extends BaseModule<Config> {
 				},
 				body: JSON.stringify({
 					ckey,
-					groups
-				})
+					groups,
+				}),
 			});
 
 			const data = (await response.json()) as PlexoraPlayerInfoResult;
-			return data
+			return data;
 		} catch (error) {
 			this.logger.error(`Error getting player info from Plexora`, error);
 			return;

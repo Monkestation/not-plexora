@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { WebhookClient } from "discord.js";
+import { GatewayIntentBits, WebhookClient } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp.js";
 import { DATA_FOLDER } from "../constants.js";
 import BaseModule from "./BaseModule.js";
@@ -72,6 +72,8 @@ class ForwardedMessageManagerMap extends Map {
 export default class ForwardedMessageManager extends BaseModule<Config> {
 	forwards: ForwardedMessageManagerMap;
 	webhookClients: Map<string, WebhookClient>;
+	static intents = [GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessages];
+
 	constructor(bot: AroxelpClient) {
 		super(bot);
 		this.bot = bot;

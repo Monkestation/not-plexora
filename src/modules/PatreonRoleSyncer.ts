@@ -1,4 +1,4 @@
-import { Events, GatewayIntentBits } from "discord.js";
+import { Collection, Events, GatewayIntentBits, GuildMember } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
 import { sleep } from "../other";
 import BaseModule from "./BaseModule";
@@ -10,6 +10,7 @@ type ServerConfig = {
 	databaseIds: string[];
 	// Map of Patreon tier IDs to Discord role IDs
 	syncs: Record<string, string>;
+	skipFirstSync?: boolean;
 };
 
 type Config = {
@@ -25,7 +26,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		super(bot);
 		bot.once(Events.ClientReady, async (client) => {
 			await sleep(2_000);
-			setInterval(this.syncRoles.bind(this), 60 * 60 * 1000); // every 60 minutes
+			setInterval(this.syncRoles.bind(this), 120 * 60 * 1000); // every 2 hours
 			void this.syncRoles();
 			this.logger.info("Checking permissions and validity of roles...");
 			for (const server of this.config.servers) {
@@ -57,6 +58,10 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		this.logger.info("Syncing roles for servers.");
 		let memberUpdateCount = 0;
 		for (const server of this.config.servers) {
+			if (server.skipFirstSync) {
+				this.logger.info(`Skipping first sync for server ${server.guildId}`);
+				continue;
+			}
 			this.logger.info(`Syncing for server '${server.guildId}'`);
 			const guild = await this.bot.guilds.fetch(server.guildId).catch(() => null);
 			if (!guild) {
@@ -103,15 +108,21 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 			const userArray = [...new Set(Array.from(playerDataMap.values()).map((p) => p.discordLink.discord_id))];
 			this.logger.debug(`Fetching guild members: ${userArray.join(" ")}`);
 
-			let memberCollection = await guild.members
-				// i only want unique discord IDs
-				.fetch({
-					user: userArray,
-				})
-			// .catch((err) => {
-			// 	this.logger.error(`Error fetching users`, err);
-			// 	return null;
-			// });
+			const CHUNK_SIZE = 100;
+
+			let memberCollection = new Collection<string, GuildMember>();
+
+			for (let i = 0; i < userArray.length; i += CHUNK_SIZE) {
+				const chunk = userArray.slice(i, i + CHUNK_SIZE);
+
+				const fetched = await guild.members.fetch({
+					user: chunk,
+				});
+
+				for (const [id, member] of fetched) {
+					memberCollection.set(id, member);
+				}
+			}
 			if (!memberCollection) {
 				this.logger.warn(`Member collection for ${server.guildId} was null`);
 				continue;
@@ -125,7 +136,6 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 					this.logger.debug(`No member for ckey ${ckey} with discordid '${playerData.discordLink.discord_id}'`);
 					continue;
 				}
-				this.logger.debug(`Checking for unsubscribed rank ${ckey}`);
 				if (!playerData.gameData.patreon_rank || ["None", "", "UNSUBBED"].includes(playerData.gameData.patreon_rank)) {
 					try {
 						const rolesToRemove = Object.values(server.syncs).filter((roleId) => member.roles.cache.has(roleId));

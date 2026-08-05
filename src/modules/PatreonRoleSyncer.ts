@@ -110,10 +110,21 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 
 			const CHUNK_SIZE = 100;
 
-			let memberCollection = new Collection<string, GuildMember>();
+			const memberCollection = new Collection<string, GuildMember>();
+			const toFetch: string[] = [];
 
-			for (let i = 0; i < userArray.length; i += CHUNK_SIZE) {
-				const chunk = userArray.slice(i, i + CHUNK_SIZE);
+			for (const id of userArray) {
+				const cached = guild.members.cache.get(id);
+
+				if (cached) {
+					memberCollection.set(id, cached);
+				} else {
+					toFetch.push(id);
+				}
+			}
+
+			for (let i = 0; i < toFetch.length; i += CHUNK_SIZE) {
+				const chunk = toFetch.slice(i, i + CHUNK_SIZE);
 
 				const fetched = await guild.members.fetch({
 					user: chunk,

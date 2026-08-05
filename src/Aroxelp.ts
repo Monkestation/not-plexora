@@ -69,6 +69,7 @@ export class AroxelpClient extends Client {
 			const moduleIntents = (module.constructor as typeof BaseModule).intents;
 			if (moduleIntents) intents.add(moduleIntents);
 		}
+		logger.info(`Set intents: ${intents.toArray()}`);
 		this.options.intents = intents;
 	}
 

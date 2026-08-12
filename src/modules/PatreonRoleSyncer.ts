@@ -21,6 +21,7 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 	static dependsOn = [SS13Database];
 	static requiredConfigKeys: string[] = ["servers", "servers.*.syncs", "servers.*.guildId", "servers.*.databaseIds"];
 	static intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers];
+	firstSkipDone = new Set<string>();
 
 	constructor(bot: AroxelpClient) {
 		super(bot);
@@ -84,8 +85,9 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 		this.logger.info("Syncing roles for servers.");
 		let memberUpdateCount = 0;
 		for (const server of Array.isArray(servers) ? servers.filter((e) => e !== undefined) : [servers]) {
-			if (server.skipFirstSync) {
+			if (server.skipFirstSync && !this.firstSkipDone.has(server.guildId)) {
 				this.logger.info(`Skipping first sync for server ${server.guildId}`);
+				this.firstSkipDone.add(server.guildId);
 				continue;
 			}
 			this.logger.info(`Syncing for server '${server.guildId}'`);

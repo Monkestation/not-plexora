@@ -1,4 +1,4 @@
-import { Collection, Events, GatewayIntentBits, GuildMember } from "discord.js";
+import { Collection, Events, GatewayIntentBits, type GuildMember } from "discord.js";
 import type { AroxelpClient } from "../Aroxelp";
 import { sleep } from "../other";
 import BaseModule from "./BaseModule";
@@ -52,12 +52,38 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				this.logger.info(`Finished checks for ${server.guildId}`);
 			}
 		});
+		bot.on(Events.MessageCreate, (message) => {
+			if (!this.bot.config.masters.includes(message.author.id)) return;
+			if (message.content.startsWith("!syncpatreonroles")) {
+				const args = message.content.split(" ");
+				if (args.length < 2) {
+					message.reply("please specify a guild ID to sync roles for.");
+					return;
+				}
+				const guildId = args[1];
+				const serverConfig =
+					this.config.servers.find((s) => s.guildId === guildId) ||
+					(guildId === "all"
+						? this.config.servers
+						: guildId === "here"
+							? [this.config.servers.find((s) => s.guildId === message.guildId)]
+							: null);
+				if (!serverConfig) {
+					message.reply(`No server config found for guild ID ${guildId}.`);
+					return;
+				}
+				void this.syncRoles(serverConfig).then(() => {
+					message.reply(`Finished syncing roles for guild ID ${guildId}.`);
+				});
+				message.reply("Syncing roles...");
+			}
+		});
 	}
 
-	async syncRoles() {
+	async syncRoles(servers: (ServerConfig | undefined)[] | ServerConfig = this.config.servers) {
 		this.logger.info("Syncing roles for servers.");
 		let memberUpdateCount = 0;
-		for (const server of this.config.servers) {
+		for (const server of Array.isArray(servers) ? servers.filter((e) => e !== undefined) : [servers]) {
 			if (server.skipFirstSync) {
 				this.logger.info(`Skipping first sync for server ${server.guildId}`);
 				continue;
@@ -133,6 +159,12 @@ export default class PatreonRoleSyncer extends BaseModule<Config> {
 				for (const [id, member] of fetched) {
 					memberCollection.set(id, member);
 				}
+			}
+
+			const missing = toFetch.filter((id) => !memberCollection.has(id));
+
+			if (missing.length) {
+				this.logger.warn(`Missing members for ${server.guildId}: ${missing.join(", ")}`);
 			}
 			if (!memberCollection) {
 				this.logger.warn(`Member collection for ${server.guildId} was null`);

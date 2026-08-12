@@ -9,6 +9,12 @@
 		}
 	},
 	"properties": {
+		"masters": {
+			"items": {
+				"type": "string"
+			},
+			"type": "array"
+		},
 		"modules": {
 			"properties": {
 				"ForwardedMessageManager": {
@@ -55,6 +61,9 @@
 									},
 									"guildId": {
 										"type": "string"
+									},
+									"skipFirstSync": {
+										"type": "boolean"
 									},
 									"syncs": {
 										"$ref": "#/definitions/Record%3Cstring%2Cstring%3E"

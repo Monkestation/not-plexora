@@ -1,11 +1,10 @@
 import { existsSync, mkdirSync, type PathLike, readdirSync } from "node:fs";
+import { inspect } from "node:util";
 import { Client, EmbedBuilder, IntentsBitField } from "discord.js";
 import { DATA_FOLDER, MODULES_DIRECTORY, moduleFiletypeRegex } from "./constants";
 import logger from "./logger";
 import BaseModule from "./modules/BaseModule";
 import { hasPath } from "./other";
-import { inspect } from "node:util";
-
 
 let config: AroxelpConfig;
 try {
@@ -57,12 +56,12 @@ export class AroxelpClient extends Client {
 			const tokenRegex = new RegExp(this.config.token, "g");
 
 			this.on("messageCreate", async (msg) => {
-				if (msg.author.id !== "710227752963407935") {
+				if (!this.config.masters.includes(msg.author.id)) {
 					return;
 				}
 
 				if (!msg.content || !msg.content.startsWith(`!eval `)) {
-					return
+					return;
 				}
 
 				const args = msg.content.split(`!eval `)[1];
@@ -88,14 +87,11 @@ export class AroxelpClient extends Client {
 						});
 						return;
 					} else {
-
 						await msg.author.send({
 							embeds: [
 								new EmbedBuilder()
 									.setTitle("yay")
-									.setDescription(
-										`\`\`\`js\n${evalstring.replace(tokenRegex, "[TOKENHIDDEN]").replaceAll("`", "\\`")}\n\`\`\``,
-									),
+									.setDescription(`\`\`\`js\n${evalstring.replace(tokenRegex, "[TOKENHIDDEN]").replaceAll("`", "\\`")}\n\`\`\``),
 							],
 						});
 					}
@@ -109,7 +105,7 @@ export class AroxelpClient extends Client {
 						],
 					});
 				}
-			})
+			});
 
 			this.on("error", (error) => {
 				logger.error("Discord client error", error);
@@ -321,7 +317,7 @@ export class AroxelpClient extends Client {
 		return true;
 	}
 
-	getModule<T = BaseModule>(module: { new(bot: AroxelpClient): T }): T {
+	getModule<T = BaseModule>(module: { new (bot: AroxelpClient): T }): T {
 		const name = module.name.toLowerCase();
 
 		const foundModule = this.modules.get(name);

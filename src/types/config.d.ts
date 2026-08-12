@@ -1,5 +1,6 @@
 type AroxelpConfig = {
 	token: string;
+	masters: string[];
 	modules: {
 		ForwardedMessageManager: import("../modules/ForwardedMessageManager").default["config"];
 		PatreonRoleSyncer: import("../modules/PatreonRoleSyncer").default["config"];
